@@ -30,6 +30,13 @@
       "Repository": "CRAN",
       "Hash": "08588806cba69f04797dab50627428ed"
     },
+    "R0": {
+      "Package": "R0",
+      "Version": "1.2-6",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "e168200863919a45af8ba2e2711df839"
+    },
     "R6": {
       "Package": "R6",
       "Version": "2.5.0",
