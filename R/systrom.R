@@ -1,6 +1,6 @@
 import::from(magrittr, "%>%")
 
-est_rt_Systrom <- function(covid_cases, state_selected, GAMMA = 1/7, R_T_MAX = 12) {
+est_re_Systrom <- function(covid_cases, state_selected, GAMMA = 1/7, R_T_MAX = 12) {
   r_t_range <- seq(0, R_T_MAX, length = 100 * R_T_MAX + 1)
   
   # Compute new cases and smooth them

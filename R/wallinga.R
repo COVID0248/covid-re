@@ -5,7 +5,7 @@ R.from.r <- function (r, GT) {
   R = 1/sum(GT$GT * (exp(-r * (0:(Tmax - 1)))))
 }
 
-est_rt_exp <- function(ts, GT_obj, half_window_width=3L) {
+est_re_exp <- function(ts, GT_obj, half_window_width=3L) {
   # Loop over all time points where the sliding window fits in
   res <- sapply((half_window_width+1):(length(ts)-half_window_width), function(t) {
     # Define the sliding window
