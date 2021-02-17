@@ -41,7 +41,8 @@ stan_fit   <- rstan::sampling(object = stan_model, data = stan_data)
 re_systrom <-
   data %>%
   dplyr::arrange(codigo_semana, codigo_comuna) %>%
-  dplyr::mutate(Rt = rstan::get_posterior_mean(stan_fit, "R")[, 5]) %T>%
+  dplyr::mutate(Rt = rstan::get_posterior_mean(stan_fit, "R")[, 5]) %>%
+  dplyr::as_tibble() %T>%
   saveRDS("data/re_systrom.rds")
 
 # R efectivo (Cislaghi) ----
@@ -80,7 +81,30 @@ re_wallinga <-
         GT_obj = R0::generation.time("gamma", c(6.6 / 7, 1.5 / 7^2)),
         half_window_width = 3
       ) %>%
-    data.frame(Date = names(.), R_hat = ., codigo_comuna = .x)
+      dplyr::tibble(
+        codigo_semana = as.numeric(names(.)), 
+        codigo_comuna = .x,
+        Rt            = .
+      )
   ) %>%
-  purrr::reduce(rbind) %T>%
+  purrr::reduce(rbind) %>%
+  dplyr::inner_join(data, by = c("codigo_comuna", "codigo_semana")) %T>%
   saveRDS("data/re_wallinga.rds")
+
+# R efectivo (filtrado) ----
+
+n0 <- 1000
+re <- 
+  list.files("data", full.names = TRUE) %>% 
+  purrr::map(function(.x) {
+    readRDS(.x) %>%
+      dplyr::ungroup() %>%
+      dplyr::filter(n >= 1000) %>%
+      dplyr::summarise(
+        file = .x,
+        min = min(Rt, na.rm = TRUE),
+        max = max(Rt, na.rm = TRUE)
+      )
+  }) %>%
+  purrr::reduce(rbind) %T>%
+  print()
