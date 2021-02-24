@@ -113,44 +113,44 @@ re <-
   dplyr::ungroup() %T>%
   saveRDS("data/re.rds")
 
-# # R efectivo (filtrado) ----
-# 
-# # Solo codigo_region == 13
-# plot_01 <- 
-#   re %>%
-#   dplyr::filter(codigo_region == 13) %>%
-#   dplyr::mutate(method = as.factor(method)) %>%
-#   dplyr::group_by(method, codigo_semana) %>%
-#   dplyr::summarize(
-#     r_min = min(Rt), 
-#     r_max = max(Rt)
-#   ) %>%
-#   tidyr::gather("stat", "value", -c(codigo_semana, method)) %>%
-#   ggplot2::ggplot() +
-#   ggplot2::geom_line(ggplot2::aes(
-#     x      = codigo_semana, 
-#     y      = value, 
-#     colour = stat
-#   )) +
-#   ggplot2::facet_grid(rows = ggplot2::vars(method), scales = "free_y")
-# ggplot2::ggsave(plot_01, file = "images/plot_01.pdf")
-# 
-# # Solo codigo_semana >= 10
-# plot_02 <- 
-#   re %>%
-#   dplyr::filter(codigo_semana >= 10) %>%
-#   dplyr::mutate(method = as.factor(method)) %>%
-#   dplyr::group_by(method, codigo_semana) %>%
-#   dplyr::summarize(
-#     r_min = min(Rt), 
-#     r_max = max(Rt)
-#   ) %>%
-#   tidyr::gather("stat", "value", -c(codigo_semana, method)) %>%
-#   ggplot2::ggplot() +
-#   ggplot2::geom_line(ggplot2::aes(
-#     x      = codigo_semana, 
-#     y      = value, 
-#     colour = stat
-#   )) +
-#   ggplot2::facet_grid(rows = ggplot2::vars(method), scales = "free_y")
-# ggplot2::ggsave(plot_02, file = "images/plot_02.pdf")
+# R efectivo (filtrado) ----
+
+# Solo codigo_region == 13
+plot_01 <-
+  re %>%
+  dplyr::filter(codigo_region == 13) %>%
+  dplyr::mutate(method = as.factor(method)) %>%
+  dplyr::group_by(method, codigo_semana) %>%
+  dplyr::summarize(
+    r_min = min(Rt),
+    r_max = max(Rt)
+  ) %>%
+  tidyr::gather("stat", "value", -c(codigo_semana, method)) %>%
+  ggplot2::ggplot() +
+  ggplot2::geom_line(ggplot2::aes(
+    x      = codigo_semana,
+    y      = value,
+    colour = stat
+  )) +
+  ggplot2::facet_grid(rows = ggplot2::vars(method), scales = "free_y")
+ggplot2::ggsave(plot_01, file = "images/plot_01.pdf")
+
+# Solo codigo_semana >= 10
+plot_02 <-
+  re %>%
+  dplyr::filter(codigo_semana >= 10) %>%
+  dplyr::mutate(method = as.factor(method)) %>%
+  dplyr::group_by(method, codigo_semana) %>%
+  dplyr::summarize(
+    r_min = min(Rt),
+    r_max = max(Rt)
+  ) %>%
+  tidyr::gather("stat", "value", -c(codigo_semana, method)) %>%
+  ggplot2::ggplot() +
+  ggplot2::geom_line(ggplot2::aes(
+    x      = codigo_semana,
+    y      = value,
+    colour = stat
+  )) +
+  ggplot2::facet_grid(rows = ggplot2::vars(method), scales = "free_y")
+ggplot2::ggsave(plot_02, file = "images/plot_02.pdf")
