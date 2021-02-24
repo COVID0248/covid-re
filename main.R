@@ -21,7 +21,7 @@ data <-
     casos_nuevos  = pmax(casos_confirmados, 1),
     n             = poblacion
   ) %>%
-  dplyr::select(codigo_comuna, codigo_semana, n, casos_nuevos) %>%
+  dplyr::select(dplyr::contains("codigo"), n, casos_nuevos) %>%
   dplyr::arrange(codigo_comuna, codigo_semana)
 
 # R efectivo (Systrom) ----
@@ -41,7 +41,10 @@ stan_fit   <- rstan::sampling(object = stan_model, data = stan_data)
 re_systrom <-
   data %>%
   dplyr::arrange(codigo_semana, codigo_comuna) %>%
-  dplyr::mutate(Rt = rstan::get_posterior_mean(stan_fit, "R")[, 5]) %>%
+  dplyr::mutate(
+    Rt = rstan::get_posterior_mean(stan_fit, "R")[, 5],
+    method = "systrom"
+  ) %>%
   dplyr::as_tibble() %T>%
   saveRDS("data/re_systrom.rds")
 
@@ -50,7 +53,10 @@ re_systrom <-
 re_cislaghi <-
   data %>%
   dplyr::group_by(codigo_comuna) %>%
-  dplyr::mutate(Rt = casos_nuevos / dplyr::lag(casos_nuevos, 1)) %T>%
+  dplyr::mutate(
+    Rt = casos_nuevos / dplyr::lag(casos_nuevos, 1),
+    method = "cislaghi"
+  ) %T>%
   saveRDS("data/re_cislaghi.rds")
 
 # R efectivo (JRC) ----
@@ -58,7 +64,10 @@ re_cislaghi <-
 re_jrc <-
   data %>%
   dplyr::group_by(codigo_comuna) %>%
-  dplyr::mutate(Rt = log(casos_nuevos / dplyr::lag(casos_nuevos)) + 1) %T>%
+  dplyr::mutate(
+    Rt = log(casos_nuevos / dplyr::lag(casos_nuevos)) + 1,
+    method = "jrc"
+  ) %T>%
   saveRDS("data/re_jrc.rds")
 
 # R efectivo (RKI) ----
@@ -66,7 +75,10 @@ re_jrc <-
 re_rki <-
   data %>%
   dplyr::group_by(codigo_comuna) %>%
-  dplyr::mutate(Rt = casos_nuevos / dplyr::lag(casos_nuevos, 1)) %T>%
+  dplyr::mutate(
+    Rt = casos_nuevos / dplyr::lag(casos_nuevos, 1),
+    method = "rki"
+  ) %T>%
   saveRDS("data/re_rki.rds")
 
 # R efectivo (Wallinga) ----
@@ -82,6 +94,7 @@ re_wallinga <-
         half_window_width = 3
       ) %>%
       dplyr::tibble(
+        method        = "wallinga",
         codigo_semana = as.numeric(names(.)), 
         codigo_comuna = .x,
         Rt            = .
@@ -91,20 +104,53 @@ re_wallinga <-
   dplyr::inner_join(data, by = c("codigo_comuna", "codigo_semana")) %T>%
   saveRDS("data/re_wallinga.rds")
 
-# R efectivo (filtrado) ----
+# Base final ----
 
-n0 <- 1000
 re <- 
   list.files("data", full.names = TRUE) %>% 
-  purrr::map(function(.x) {
-    readRDS(.x) %>%
-      dplyr::ungroup() %>%
-      dplyr::filter(n >= 1000) %>%
-      dplyr::summarise(
-        file = .x,
-        min = min(Rt, na.rm = TRUE),
-        max = max(Rt, na.rm = TRUE)
-      )
-  }) %>%
-  purrr::reduce(rbind) %T>%
-  print()
+  purrr::map(readRDS) %>%
+  dplyr::bind_rows() %>%  
+  dplyr::ungroup() %T>%
+  saveRDS("data/re.rds")
+
+# # R efectivo (filtrado) ----
+# 
+# # Solo codigo_region == 13
+# plot_01 <- 
+#   re %>%
+#   dplyr::filter(codigo_region == 13) %>%
+#   dplyr::mutate(method = as.factor(method)) %>%
+#   dplyr::group_by(method, codigo_semana) %>%
+#   dplyr::summarize(
+#     r_min = min(Rt), 
+#     r_max = max(Rt)
+#   ) %>%
+#   tidyr::gather("stat", "value", -c(codigo_semana, method)) %>%
+#   ggplot2::ggplot() +
+#   ggplot2::geom_line(ggplot2::aes(
+#     x      = codigo_semana, 
+#     y      = value, 
+#     colour = stat
+#   )) +
+#   ggplot2::facet_grid(rows = ggplot2::vars(method), scales = "free_y")
+# ggplot2::ggsave(plot_01, file = "images/plot_01.pdf")
+# 
+# # Solo codigo_semana >= 10
+# plot_02 <- 
+#   re %>%
+#   dplyr::filter(codigo_semana >= 10) %>%
+#   dplyr::mutate(method = as.factor(method)) %>%
+#   dplyr::group_by(method, codigo_semana) %>%
+#   dplyr::summarize(
+#     r_min = min(Rt), 
+#     r_max = max(Rt)
+#   ) %>%
+#   tidyr::gather("stat", "value", -c(codigo_semana, method)) %>%
+#   ggplot2::ggplot() +
+#   ggplot2::geom_line(ggplot2::aes(
+#     x      = codigo_semana, 
+#     y      = value, 
+#     colour = stat
+#   )) +
+#   ggplot2::facet_grid(rows = ggplot2::vars(method), scales = "free_y")
+# ggplot2::ggsave(plot_02, file = "images/plot_02.pdf")
