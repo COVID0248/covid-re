@@ -79,6 +79,13 @@
       "Repository": "RSPM",
       "Hash": "0459d4dd7a8c239be18469a30c23dd4b"
     },
+    "TMB": {
+      "Package": "TMB",
+      "Version": "1.7.19",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "47dcf908c560ace98bd71a6a7a055d14"
+    },
     "TTR": {
       "Package": "TTR",
       "Version": "0.24.2",
@@ -107,12 +114,33 @@
       "Repository": "RSPM",
       "Hash": "644043219fc24e190c2f620c1a380a69"
     },
+    "boot": {
+      "Package": "boot",
+      "Version": "1.3-25",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "bd51734a754b6c2baf28b2d1ebc11e91"
+    },
     "brio": {
       "Package": "brio",
       "Version": "1.1.1",
       "Source": "Repository",
       "Repository": "RSPM",
       "Hash": "36758510e65a457efeefa50e1e7f0576"
+    },
+    "broom": {
+      "Package": "broom",
+      "Version": "0.7.5",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "d5ab8846336cfb2e3c17e5a806eb3045"
+    },
+    "broom.mixed": {
+      "Package": "broom.mixed",
+      "Version": "0.2.6",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "b7fd49962c14d6a7fada6b5f3afb9309"
     },
     "callr": {
       "Package": "callr",
@@ -135,6 +163,13 @@
       "Repository": "RSPM",
       "Hash": "26fb4f0871c8e5b84d77f6dc22f2ee0a"
     },
+    "coda": {
+      "Package": "coda",
+      "Version": "0.19-4",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "24b6d006b8b2343876cf230687546932"
+    },
     "colorspace": {
       "Package": "colorspace",
       "Version": "2.0-0",
@@ -155,6 +190,13 @@
       "Source": "Repository",
       "Repository": "RSPM",
       "Hash": "e75525c55c70e5f4f78c9960a4b402e9"
+    },
+    "cubelyr": {
+      "Package": "cubelyr",
+      "Version": "1.0.1",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "da6ba095ae2dc4ecab6e9156633c5901"
     },
     "curl": {
       "Package": "curl",
@@ -303,6 +345,13 @@
       "Repository": "RSPM",
       "Hash": "361811f31f71f8a617a9a68bf63f1f42"
     },
+    "lme4": {
+      "Package": "lme4",
+      "Version": "1.1-26",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "5f2466f5127e0ce67e44bb381387eeca"
+    },
     "loo": {
       "Package": "loo",
       "Version": "2.4.1",
@@ -331,6 +380,13 @@
       "Repository": "CRAN",
       "Hash": "eb7b6439bc6d812eed2cddba5edc6be3"
     },
+    "minqa": {
+      "Package": "minqa",
+      "Version": "1.2.4",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "eaee7d2a6f3ed4491df868611cb064cc"
+    },
     "munsell": {
       "Package": "munsell",
       "Version": "0.5.0",
@@ -340,10 +396,17 @@
     },
     "nlme": {
       "Package": "nlme",
-      "Version": "3.1-149",
+      "Version": "3.1-152",
       "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "7c24ab3a1e3afe50388eb2d893aab255"
+      "Repository": "RSPM",
+      "Hash": "35de1ce639f20b5e10f7f46260730c65"
+    },
+    "nloptr": {
+      "Package": "nloptr",
+      "Version": "1.2.2.2",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "2737faeee353704efec5afa1e943dd64"
     },
     "pillar": {
       "Package": "pillar",
@@ -372,6 +435,13 @@
       "Source": "Repository",
       "Repository": "RSPM",
       "Hash": "b6b150cd4709e0c0c9b5d51ac4376282"
+    },
+    "plyr": {
+      "Package": "plyr",
+      "Version": "1.8.6",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "ec0e5ab4e5f851f6ef32cd1d1984957f"
     },
     "praise": {
       "Package": "praise",
@@ -422,6 +492,13 @@
       "Repository": "RSPM",
       "Hash": "5c0cdb37f063c58cdab3c7e9fbb8bd2c"
     },
+    "reshape2": {
+      "Package": "reshape2",
+      "Version": "1.4.4",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "bb5996d0bd962d214a11140d77589917"
+    },
     "rlang": {
       "Package": "rlang",
       "Version": "0.4.10",
@@ -463,6 +540,27 @@
       "Source": "Repository",
       "Repository": "RSPM",
       "Hash": "1cb390cce52318cf0b6a0513d9b676f2"
+    },
+    "statmod": {
+      "Package": "statmod",
+      "Version": "1.4.35",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "53c27113461e8abbe2dc7125e22b2a39"
+    },
+    "stringi": {
+      "Package": "stringi",
+      "Version": "1.5.3",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "a063ebea753c92910a4cca7b18bc1f05"
+    },
+    "stringr": {
+      "Package": "stringr",
+      "Version": "1.4.0",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "0759e6b6c0957edb1311028a49a35e76"
     },
     "testthat": {
       "Package": "testthat",

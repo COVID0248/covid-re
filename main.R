@@ -5,6 +5,7 @@ options(mc.cores = parallel::detectCores())
 import::from(magrittr, "%>%", "%$%", "%T>%")
 
 source("R/wallinga.R")
+source("R/utils.R")
 
 # Datos ----
 
@@ -95,7 +96,7 @@ re_wallinga <-
       ) %>%
       dplyr::tibble(
         method        = "wallinga",
-        codigo_semana = as.numeric(names(.)), 
+        codigo_semana = as.numeric(names(.)),
         codigo_comuna = .x,
         Rt            = .
       )
@@ -106,10 +107,10 @@ re_wallinga <-
 
 # Base final ----
 
-re <- 
-  list.files("data", full.names = TRUE) %>% 
+re <-
+  list.files("data", full.names = TRUE) %>%
   purrr::map(readRDS) %>%
-  dplyr::bind_rows() %>%  
+  dplyr::bind_rows() %>%
   dplyr::ungroup() %T>%
   saveRDS("data/re.rds")
 
@@ -154,3 +155,139 @@ plot_02 <-
   )) +
   ggplot2::facet_grid(rows = ggplot2::vars(method), scales = "free_y")
 ggplot2::ggsave(plot_02, file = "images/plot_02.pdf")
+
+# Primera versión de un modelo ----
+
+# Número de habitantes, según comuna y región
+poblacion_comuna <-
+  readRDS("data/comunas.rds") %>%
+  dplyr::select(cod_comuna, cod_region, poblacion)
+
+# Porcentaje de población veicna en cuarentena,
+# según comuna, id de cuarentena y semana de cuarentena
+pp_vecinos_cuarentena <-
+  readRDS("data/pp_vecinos_cuarentena.rds")
+
+# Limpia la bbdd suministrada por Oscar
+data <-
+  read.csv("data/tabla_7nov.csv") %>%
+  dplyr::arrange(comuna, id_cuarentena, semana) %>%
+  dplyr::mutate(comuna_cuarentena = paste(comuna, id_cuarentena)) %>%
+  dplyr::select(-ips) %>%
+  dplyr::group_by(comuna_cuarentena) %>%
+  dplyr::mutate(
+    duracion_cuarentena = dplyr::n(),
+    log_nuevos_x10mil = log(1 + nuevos_x10mil),
+    lag_log_nuevos_x10mil = dplyr::lag(log_nuevos_x10mil)
+  ) %>%
+  dplyr::filter(duracion_cuarentena > 2) %>%
+  dplyr::ungroup() %>%
+  dplyr::inner_join(
+    poblacion_comuna,
+    by = c("codigo_comuna" = "cod_comuna")
+  ) %>%
+  dplyr::mutate(
+    inmigrantes =
+      inmigrantes / poblacion,
+    poblacion_edad_20_a_64 =
+      poblacion_edad_15_a_64 / poblacion -
+      poblacion_edad_15_a_19 / poblacion,
+    semana_fct = as.factor(semana),
+    region_fct = as.factor(cod_region),
+    comuna_fct = as.factor(codigo_comuna),
+    semana2 = semana^2
+  ) %>%
+  # Reescalamientos cosméticos
+  dplyr::mutate(
+    densidad_poblacional = densidad_poblacional / 1000,
+    hacinamiento = hacinamiento / 100,
+    inmigrantes = inmigrantes / 100,
+    idse = idse / 1000,
+    indice_ruralidad = indice_ruralidad / 100
+  ) %>%
+  # Agrega el rezago de pp de vecinos en cuarentena
+  dplyr::inner_join(pp_vecinos_cuarentena) %>%
+  dplyr::arrange(codigo_comuna, id_cuarentena, semana) %>%
+  dplyr::group_by(codigo_comuna, id_cuarentena) %>%
+  dplyr::mutate(pvcl1 = dplyr::lag(pvc)) %>%
+  dplyr::ungroup() #%>%
+  #na.omit()
+
+# Añade los RE calculados previamente
+df_final <- 
+  re_cislaghi %>%
+  dplyr::mutate(semana = codigo_semana - 6) %>%
+  dplyr::inner_join(data) %>%
+  na.omit() %>%
+  dplyr::ungroup()
+
+# Crea un listado con los ajustes de los dos modelos considerados hasta ahora
+source("R/utils.R")
+fit <- 
+  c(
+    "activos_comienzo",
+    "capital_regional",
+    "capital_provincial",
+    "aeropuerto",
+    "puerto",
+    "poblacion_edad_20_a_64",
+    "densidad_poblacional",
+    "hacinamiento",
+    "inmigrantes",
+    "idse",
+    "indice_ruralidad",
+    "pvcl1"
+  ) %>%
+  {list(c(., "semana_fct"), c(., "semana", "semana2"))} %>%
+  purrr::map(~ mystepwise(
+    yvar0       = "Rt",
+    xvar0       = .x,
+    preserve    = c("pvcl1", "semana", "semana2", "semana_fct"),
+    random      = "(1 | region_fct / comuna_fct)", 
+    max_pval    = 0.1,
+    data        = df_final
+  ))
+
+# Guarda las tablas con los resultados (coeficientes)
+file <- 'data/resumen modelo {.x} - efectos fijos.csv'
+1:2 %>%
+  purrr::walk(
+    ~ broom.mixed::tidy(fit[[.x]], effects = "fixed") %>%
+      write.csv(glue::glue(file), row.names = FALSE)
+  )
+
+# Guarda las tablas con los resultados (varianzas de los re)
+file <- 'data/resumen modelo {.x} - efectos aleatorios.csv'
+1:2 %>%
+  purrr::walk(
+    ~ nlme::VarCorr(fit[[.x]]) %>% 
+      write.csv(glue::glue(file))
+  )
+
+# Grafica los valores ajustados
+1:2 %>%
+  purrr::map(
+    ~ df_final %>%
+      dplyr::mutate(
+        yhat = fitted(fit[[.x]]), 
+        model_id = paste("Modelo", .x)
+      )) %>%
+  purrr::reduce(rbind) %>%
+  ggplot2::ggplot(ggplot2::aes(
+    x = semana, 
+    y = yhat, 
+    group = comuna_cuarentena, 
+    color = comuna_cuarentena
+  )) +
+  ggplot2::geom_line(size = 0.5) +
+  ggplot2::theme_classic() +
+  ggplot2::theme(legend.position = "none") +
+  ggplot2::labs(
+    y = "Casos nuevos (por 10.000 habitantes) ajustados por el modelo",
+    x = "Semanas desde el inicio de la cuarentena",
+    color = "comuna, según id de cuarentena"
+  ) +
+  ggplot2::facet_wrap(~ model_id)
+ggplot2::ggsave("images/plot-01.pdf")
+
+
