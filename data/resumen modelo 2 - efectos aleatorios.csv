@@ -1,4 +1,4 @@
 "","grp","var1","var2","vcov","sdcor"
-"1","comuna_fct:region_fct","(Intercept)",NA,0,0
-"2","region_fct","(Intercept)",NA,0,0
-"3","Residual",NA,NA,2.45745020730428,1.56762565917514
+"1","comuna_fct:region_fct","(Intercept)",NA,0.00510027021843887,0.0714161761678604
+"2","region_fct","(Intercept)",NA,0.0194981328793045,0.139635714913143
+"3","Residual",NA,NA,0.0710976324532636,0.26664139298553

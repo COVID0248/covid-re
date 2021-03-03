@@ -215,7 +215,7 @@ data <-
 
 # Añade los RE calculados previamente
 df_final <- 
-  re_cislaghi %>%
+  readRDS("data/re_wallinga.rds") %>%
   dplyr::mutate(semana = codigo_semana - 6) %>%
   dplyr::inner_join(data) %>%
   na.omit() %>%
