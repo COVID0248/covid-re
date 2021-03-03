@@ -41,8 +41,9 @@ df_semana_cuarentena <-
   dplyr::filter(ctn == 1) %>%
   dplyr::mutate(id_cuarentena = cumsum(id_cuarentena)) %>%
   dplyr::group_by(comuna, id_cuarentena) %>%
-  dplyr::mutate(semana_cuarentena = dplyr::row_number())
-
+  dplyr::mutate(semana_cuarentena = dplyr::row_number()) %T>%
+  saveRDS("data/semana_cuarentena.rds")
+  
 # Porcentaje de población veicna en cuarentena, 
 # según comuna, id de cuarentena y semana de cuarentena
 df <-

@@ -213,10 +213,12 @@ data <-
   dplyr::ungroup() #%>%
   #na.omit()
 
-# Añade los RE calculados previamente
-df_final <- 
+# Une los RE calculados previamente con id_cuarentena x semana_cuarentena
+df_final <-
   readRDS("data/re_wallinga.rds") %>%
-  dplyr::mutate(semana = codigo_semana - 6) %>%
+  dplyr::rename(semana = codigo_semana, comuna = codigo_comuna) %>%
+  dplyr::inner_join(readRDS("data/semana_cuarentena.rds")) %>%
+  dplyr::select(Rt, id_cuarentena, semana = semana_cuarentena, codigo_comuna = comuna) %>%
   dplyr::inner_join(data) %>%
   na.omit() %>%
   dplyr::ungroup()
