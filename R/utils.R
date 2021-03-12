@@ -242,8 +242,9 @@ get_df <- function(df_r, df_pasos, df_comunas) {
   dplyr::mutate(
     comuna_fct = as.factor(codigo_comuna),
     region_fct = as.factor(codigo_region),
-    paso_l0    = as.factor(paso),
-    paso_l1    = as.factor(dplyr::lag(paso))
+    paso_l1    = as.factor(dplyr::lag(paso, 1)),
+    paso_l3    = as.factor(dplyr::lag(paso, 3)),
+    paso_l5    = as.factor(dplyr::lag(paso, 5))
   ) %>%
   dplyr::ungroup() %>%
   dplyr::select(
@@ -260,8 +261,9 @@ get_df <- function(df_r, df_pasos, df_comunas) {
     puerto,
     idse,
     indice_ruralidad,
-    paso_l0,
     paso_l1,
+    paso_l3,
+    paso_l5
   ) %>%
   na.omit()
 }
@@ -276,13 +278,14 @@ get_fit <- function(df) {
     "puerto",
     "idse",
     "indice_ruralidad",
-    "paso_l0",
-    "paso_l1"
+    "paso_l1",
+    "paso_l3",
+    "paso_l5"
   )
   mystepwise(
     yvar0    = "r",
     xvar0    = covariates,
-    preserve = c("paso_l0", "paso_l1"),
+    preserve = "",
     random   = "(1 | region_fct / comuna_fct)",
     max_pval = 0.1,
     data     = df
@@ -296,3 +299,8 @@ get_cov <- function(fit) {
 get_b <- function(fit) {
   broom.mixed::tidy(fit, effects = "fixed")
 }
+
+# Probar rezagos más grandes (5)
+# Añadr espacios entre los rezagos (e.g. 1, 3, 5)
+# Añadir un par de gráficos comparando el R con las variables que queden en el modelo
+# Buscar variables que varíen en el tiempo
