@@ -9,8 +9,9 @@ library(magrittr)
 is_integer64 <- function(x) class(x)[1] == "integer64"
 
 # 2.2. get_sem_epi - Retorna la se asociada a una fecha ----
-get_sem_epi <- function(x = Sys.Date()) 
+get_sem_epi <- function(x = Sys.Date()) { 
   as.integer(difftime(x, "2020-02-23", units = "weeks")) + 9
+}
 
 # 3. Importa BBDD desde AWS ----
 
@@ -29,7 +30,7 @@ conn <-
 # Carga una BBDD de prueba
 # 3.2. Importa las tablas/vistas ----
 tbl <-
-  set_names(c(
+  purrr::set_names(c(
     "vecinos", 
     "comunas", 
     "p19_activos_dc", 
