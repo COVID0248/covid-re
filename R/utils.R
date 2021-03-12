@@ -64,6 +64,24 @@ get_conn <- function() {
     )
 }
 
+get_pob_20_64 <- function(conn) {
+  conn %>%
+    dplyr::tbl("poblacion_edad") %>% 
+    dplyr::select(
+      codigo_comuna, 
+      edad, 
+      n = total_poblacion_efectivamente_censada
+    ) %>%
+    dplyr::collect() %>%
+    dplyr::mutate(dplyr::across(
+      where(bit64::is.integer64), 
+      as.integer
+    )) %>%
+    dplyr::filter(edad %in% 20:64) %>%
+    dplyr::group_by(codigo_comuna) %>%
+    dplyr::summarise(pob_20_a_64 = sum(n))
+}
+
 get_inmigrantes <- function(conn) {
   conn %>%
     dplyr::tbl("censo") %>% 
@@ -78,7 +96,7 @@ get_inmigrantes <- function(conn) {
     )
 }
 
-get_comunas <- function(conn, inmigrantes) {
+get_comunas <- function(conn, inmigrantes, pob_20_64) {
   conn %>%
     dplyr::tbl("maestra_comunas") %>% 
     dplyr::collect() %>%
@@ -90,7 +108,8 @@ get_comunas <- function(conn, inmigrantes) {
       codigo_comuna = cod_comuna, 
       codigo_region = cod_region
     ) %>%
-    dplyr::inner_join(inmigrantes)
+    dplyr::inner_join(inmigrantes) %>%
+    dplyr::inner_join(pob_20_64)
 }
 
 get_pasos <- function() {
@@ -241,6 +260,8 @@ get_df <- function(df_r, df_pasos, df_comunas) {
     comuna,
     capital_regional,
     capital_provincial,
+    pob_20_a_64,
+    inmigrantes,
     aeropuerto,
     puerto,
     idse,
@@ -255,6 +276,8 @@ get_fit <- function(df) {
   covariates <- c(
     "capital_regional",
     "capital_provincial",
+    "pob_20_a_64",
+    "inmigrantes",
     "aeropuerto",
     "puerto",
     "idse",
