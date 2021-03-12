@@ -16,6 +16,13 @@
       "Repository": "RSPM",
       "Hash": "e4c04affc2cac20c8fec18385cd14691"
     },
+    "DBI": {
+      "Package": "DBI",
+      "Version": "1.1.1",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "030aaec5bc6553f35347cbb1e70b1a17"
+    },
     "MASS": {
       "Package": "MASS",
       "Version": "7.3-53",
@@ -100,6 +107,13 @@
       "Repository": "RSPM",
       "Hash": "8c5e8c58ff4fc8dfc67e24985005159b"
     },
+    "askpass": {
+      "Package": "askpass",
+      "Version": "1.1",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "e8a22846fff485f0be3770c2da758713"
+    },
     "assertthat": {
       "Package": "assertthat",
       "Version": "0.2.1",
@@ -113,6 +127,13 @@
       "Source": "Repository",
       "Repository": "RSPM",
       "Hash": "644043219fc24e190c2f620c1a380a69"
+    },
+    "base64enc": {
+      "Package": "base64enc",
+      "Version": "0.1-3",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "543776ae6848fde2f48ff3816d0628bc"
     },
     "boot": {
       "Package": "boot",
@@ -205,6 +226,13 @@
       "Repository": "RSPM",
       "Hash": "2b7d10581cc730804e9ed178c8374bd6"
     },
+    "data.table": {
+      "Package": "data.table",
+      "Version": "1.14.0",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "d1b8b1a821ee564a3515fa6c6d5c52dc"
+    },
     "desc": {
       "Package": "desc",
       "Version": "1.2.0",
@@ -296,12 +324,26 @@
       "Repository": "RSPM",
       "Hash": "ac5c6baf7822ce8732b343f14c072c4d"
     },
+    "httr": {
+      "Package": "httr",
+      "Version": "1.4.2",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "a525aba14184fec243f9eaec62fbed43"
+    },
     "import": {
       "Package": "import",
       "Version": "1.2.0",
       "Source": "Repository",
       "Repository": "RSPM",
       "Hash": "d387ef61b97f930c4737d59ab91a9885"
+    },
+    "ini": {
+      "Package": "ini",
+      "Version": "0.3.1",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "6154ec2223172bce8162d4153cda21f7"
     },
     "inline": {
       "Package": "inline",
@@ -380,6 +422,13 @@
       "Repository": "CRAN",
       "Hash": "eb7b6439bc6d812eed2cddba5edc6be3"
     },
+    "mime": {
+      "Package": "mime",
+      "Version": "0.10",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "26fa77e707223e1ce042b2b5d09993dc"
+    },
     "minqa": {
       "Package": "minqa",
       "Version": "1.2.4",
@@ -407,6 +456,111 @@
       "Source": "Repository",
       "Repository": "RSPM",
       "Hash": "2737faeee353704efec5afa1e943dd64"
+    },
+    "noctua": {
+      "Package": "noctua",
+      "Version": "2.0.1",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "4fb7f8dd20e72cf38e9d7feb252191b2"
+    },
+    "openssl": {
+      "Package": "openssl",
+      "Version": "1.4.3",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "a399e4773075fc2375b71f45fca186c4"
+    },
+    "paws": {
+      "Package": "paws",
+      "Version": "0.1.10",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "9eb8c3940ec416fc0cce7ada6fd8a593"
+    },
+    "paws.analytics": {
+      "Package": "paws.analytics",
+      "Version": "0.1.11",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "b27a7fab001c13d69cce406315f991c1"
+    },
+    "paws.application.integration": {
+      "Package": "paws.application.integration",
+      "Version": "0.1.11",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "15be816c36116393eff157fe061cb564"
+    },
+    "paws.common": {
+      "Package": "paws.common",
+      "Version": "0.3.9",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "bb562476d64b4bd28ff8916964fbd61f"
+    },
+    "paws.compute": {
+      "Package": "paws.compute",
+      "Version": "0.1.11",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "421a8a6138b5707842d49c6b47cf48d8"
+    },
+    "paws.cost.management": {
+      "Package": "paws.cost.management",
+      "Version": "0.1.11",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "37d8fd15437c3e41cbeaa826860b1452"
+    },
+    "paws.customer.engagement": {
+      "Package": "paws.customer.engagement",
+      "Version": "0.1.10",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "368579dd9c0bd1b6e1ffe7971f43c343"
+    },
+    "paws.database": {
+      "Package": "paws.database",
+      "Version": "0.1.11",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "27c9d75627046976c89f4a43279b5078"
+    },
+    "paws.machine.learning": {
+      "Package": "paws.machine.learning",
+      "Version": "0.1.11",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "27fbc04572e5a74200c75ebf7a1ca5b3"
+    },
+    "paws.management": {
+      "Package": "paws.management",
+      "Version": "0.1.11",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "85b61065160322f6729269cb59bd434e"
+    },
+    "paws.networking": {
+      "Package": "paws.networking",
+      "Version": "0.1.11",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "603472424ac4c5244abba09728bd15e5"
+    },
+    "paws.security.identity": {
+      "Package": "paws.security.identity",
+      "Version": "0.1.11",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "d4d9f0ac7e665888c12d799421fcf345"
+    },
+    "paws.storage": {
+      "Package": "paws.storage",
+      "Version": "0.1.11",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "d0a0428696cdc8099e8c93d2257b21f2"
     },
     "pillar": {
       "Package": "pillar",
@@ -562,6 +716,13 @@
       "Repository": "RSPM",
       "Hash": "0759e6b6c0957edb1311028a49a35e76"
     },
+    "sys": {
+      "Package": "sys",
+      "Version": "3.4",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "b227d13e29222b4574486cfcbde077fa"
+    },
     "testthat": {
       "Package": "testthat",
       "Version": "3.0.1",
@@ -597,6 +758,13 @@
       "Repository": "RSPM",
       "Hash": "4a5081acfb7b81a572e4384a7aaf2af1"
     },
+    "uuid": {
+      "Package": "uuid",
+      "Version": "0.1-4",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "e4169eb989a5d03ccb6b628cad1b1b50"
+    },
     "vctrs": {
       "Package": "vctrs",
       "Version": "0.3.6",
@@ -624,6 +792,13 @@
       "Source": "Repository",
       "Repository": "RSPM",
       "Hash": "caf4781c674ffa549a4676d2d77b13cc"
+    },
+    "xml2": {
+      "Package": "xml2",
+      "Version": "1.3.2",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "d4d71a75dd3ea9eb5fa28cc21f9585e2"
     },
     "xts": {
       "Package": "xts",
