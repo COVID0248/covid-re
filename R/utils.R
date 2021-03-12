@@ -4,18 +4,13 @@ R_from_r <- function (r, GT) {
 }
 
 est_re_exp <- function(ts, GT_obj, half_window_width = 3L) {
-  # Loop over all time points where the sliding window fits in
   res <- sapply(
     (half_window_width + 1):(length(ts) - half_window_width), 
     function(t) {
-      # Define the sliding window
       idx <- (t - half_window_width):(t + half_window_width)
       data <- data.frame(Date = 1:length(ts), y = as.numeric(ts))
-      # Fit a Poisson GLM
       m <- glm(y ~ 1 + Date, poisson, dplyr::slice(data, idx))
-      # Extract the growth rate 
       r <- as.numeric(coef(m)["Date"])
-      # Equation 2.9 from Wallinga & Lipsitch
       R <- R_from_r(r, GT_obj)
     }
   )
@@ -33,7 +28,6 @@ date_to_sepi <- function(x) {
   return(as.integer(diff) + 8)
 }
 
-# Stepwise regression para modelos lineales mixtos
 mystepwise <- function(yvar0, xvar0, preserve, max_pval, random, data) {
   xdel = " "
   while (xdel != "") {
