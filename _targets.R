@@ -8,8 +8,9 @@ options(mc.cores = parallel::detectCores())
 list(
   tar_target(vecinos, "data/vecinos.rds", format = "file"),
   tar_target(conn, get_conn()),
+  tar_target(pob_20_64, get_pob_20_64(conn)),
   tar_target(inmigrantes, get_inmigrantes(conn)),
-  tar_target(comunas, get_comunas(conn, inmigrantes)),
+  tar_target(comunas, get_comunas(conn, inmigrantes, pob_20_64)),
   tar_target(pasos, get_pasos()),
   tar_target(casos, get_casos()),
   tar_target(r_systrom, get_r_systrom(casos)),
