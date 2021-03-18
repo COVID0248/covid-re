@@ -243,6 +243,15 @@ get_cuarentena <- function() {
     dplyr::select(codigo_comuna, codigo_semana, cuarentena)
 }
 
+get_vacaciones <- function() {
+  inicio  <- date_to_sepi(as.Date("2021-01-01"))
+  termino <- date_to_sepi(as.Date("2021-02-28"))
+  dplyr::tibble(
+    codigo_semana = 1:date_to_sepi(Sys.Date()),
+    vacaciones    = dplyr::between(codigo_semana, inicio, termino)
+  )
+}
+
 get_r_systrom <- function(data) {
   Nareas <- dplyr::n_distinct(data$codigo_comuna)
   Ntimes <- dplyr::n_distinct(data$codigo_semana)
