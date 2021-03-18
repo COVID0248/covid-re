@@ -3,8 +3,7 @@
 # ssh-add ~/.ssh/id_rsa
 # ssh -T git@github.com
 
-# Build and run for development
-# docker build --target dev -t covid-re:dev .
+# Run docker container
 # sudo docker run \
 #     --rm \
 #     --name covid-re \
