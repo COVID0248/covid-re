@@ -13,5 +13,6 @@ RUN ssh -T git@github.com
 #     -e "ROOT=TRUE" \
 #     -e PASSWORD=123 \
 #     -v $HOME/.gitconfig:/home/rstudio/.gitconfig \
+#     -v $HOME/.aws:/home/rstudio/.aws \
 #     -v $HOME/.ssh:/home/rstudio/.ssh \
 #     covid-re:dev
