@@ -1,10 +1,10 @@
-library(targets)
-library(magrittr)
-library(dbplyr)
-library(rstan)
-source("R/utils.R")
+suppressMessages(library(targets))
+suppressMessages(library(magrittr))
+suppressMessages(library(dbplyr))
+suppressMessages(library(rstan))
 rstan::rstan_options(auto_write = TRUE)
 options(mc.cores = parallel::detectCores())
+source("R/utils.R")
 
 list(
   tar_target(vecinos, "data/vecinos.rds", format = "file"),
@@ -17,6 +17,7 @@ list(
   tar_target(pcr, get_pcr()),
   tar_target(vacuna1, get_vacuna1()),
   tar_target(vacuna2, get_vacuna2()),
+  tar_target(cuarentena, get_cuarentena()),
   tar_target(r_systrom, get_r_systrom(casos)),
   tar_target(r_cislaghi, get_r_cislaghi(casos)),
   tar_target(r_jrc, get_r_jrc(casos)),

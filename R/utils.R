@@ -213,6 +213,36 @@ get_vacuna2 <- function() {
     dplyr::as_tibble()
 }
 
+get_cuarentena <- function() {
+  cuarentenas <-
+    "https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/" %>%
+    paste0("/output/producto29/Cuarentenas-Totales.csv") %>%
+    read.csv() %>%
+    dplyr::mutate(
+      codigo_comuna = Código.CUT.Comuna,
+      inicio        = date_to_sepi(Fecha.de.Inicio),
+      termino       = date_to_sepi(Fecha.de.Término)
+    ) %>%
+    dplyr::select(codigo_comuna, inicio, termino)
+  
+  comunas <-
+    cuarentenas %$%
+    expand.grid(
+      codigo_comuna = unique(codigo_comuna),
+      codigo_semana = min(inicio):max(termino),
+      KEEP.OUT.ATTRS = FALSE
+    ) %>%
+    dplyr::as_tibble()
+  
+  cuarentenas %<>%
+    dplyr::inner_join(comunas) %>%
+    dplyr::arrange(codigo_comuna, codigo_semana) %>%
+    dplyr::mutate(
+      cuarentena = codigo_semana >= inicio & codigo_semana <= termino
+    ) %>%
+    dplyr::select(codigo_comuna, codigo_semana, cuarentena)
+}
+
 get_r_systrom <- function(data) {
   Nareas <- dplyr::n_distinct(data$codigo_comuna)
   Ntimes <- dplyr::n_distinct(data$codigo_semana)
