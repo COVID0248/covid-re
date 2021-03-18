@@ -141,6 +141,21 @@ get_casos <- function() {
     tibble::as_tibble()
 }
 
+get_pcr <- function() {
+  data <-
+    "https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master" %>%
+    paste0("/output/producto7/PCR_std.csv") %>%
+    read.csv() %>%
+    dplyr::mutate(
+      codigo_region = Codigo.region, 
+      codigo_semana = date_to_sepi(fecha)
+    ) %>%
+    dplyr::group_by(codigo_region, codigo_semana) %>%
+    dplyr::summarise(pcr = sum(numero), .groups = "drop") %>%
+    dplyr::arrange(codigo_region, codigo_semana) %>%
+    tibble::as_tibble()
+}
+
 get_r_systrom <- function(data) {
   Nareas <- dplyr::n_distinct(data$codigo_comuna)
   Ntimes <- dplyr::n_distinct(data$codigo_semana)

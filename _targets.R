@@ -13,6 +13,7 @@ list(
   tar_target(comunas, get_comunas(conn, inmigrantes, pob_20_64)),
   tar_target(pasos, get_pasos()),
   tar_target(casos, get_casos()),
+  tar_target(pcr, get_pcr()),
   tar_target(r_systrom, get_r_systrom(casos)),
   tar_target(r_cislaghi, get_r_cislaghi(casos)),
   tar_target(r_jrc, get_r_jrc(casos)),
