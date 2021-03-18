@@ -93,13 +93,6 @@
       "Repository": "RSPM",
       "Hash": "47dcf908c560ace98bd71a6a7a055d14"
     },
-    "TTR": {
-      "Package": "TTR",
-      "Version": "0.24.2",
-      "Source": "Repository",
-      "Repository": "RSPM",
-      "Hash": "7e2c62de2799dc212e5b52526c288e72"
-    },
     "V8": {
       "Package": "V8",
       "Version": "3.4.0",
@@ -148,6 +141,13 @@
       "Source": "Repository",
       "Repository": "RSPM",
       "Hash": "9fe98599ca456d6552421db0d6772d8f"
+    },
+    "blob": {
+      "Package": "blob",
+      "Version": "1.2.1",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "9addc7e2c5954eca5719928131fed98c"
     },
     "boot": {
       "Package": "boot",
@@ -253,6 +253,13 @@
       "Source": "Repository",
       "Repository": "RSPM",
       "Hash": "d1b8b1a821ee564a3515fa6c6d5c52dc"
+    },
+    "dbplyr": {
+      "Package": "dbplyr",
+      "Version": "2.1.0",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "f30247ffeeebe8d9842dc68fe63e043b"
     },
     "desc": {
       "Package": "desc",
@@ -716,13 +723,6 @@
       "Repository": "RSPM",
       "Hash": "6f76f71042411426ec8df6c54f34e6dd"
     },
-    "smoother": {
-      "Package": "smoother",
-      "Version": "1.1",
-      "Source": "Repository",
-      "Repository": "RSPM",
-      "Hash": "1cb390cce52318cf0b6a0513d9b676f2"
-    },
     "statmod": {
       "Package": "statmod",
       "Version": "1.4.35",
@@ -834,20 +834,6 @@
       "Source": "Repository",
       "Repository": "RSPM",
       "Hash": "d4d71a75dd3ea9eb5fa28cc21f9585e2"
-    },
-    "xts": {
-      "Package": "xts",
-      "Version": "0.12.1",
-      "Source": "Repository",
-      "Repository": "RSPM",
-      "Hash": "ca2fd4ad8ef78cca3aa2b30f992798a8"
-    },
-    "zoo": {
-      "Package": "zoo",
-      "Version": "1.8-8",
-      "Source": "Repository",
-      "Repository": "RSPM",
-      "Hash": "c2ea03282caa1f6972dc84fc5bf671cc"
     }
   }
 }
