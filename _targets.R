@@ -15,6 +15,8 @@ list(
   tar_target(pasos, get_pasos()),
   tar_target(casos, get_casos()),
   tar_target(pcr, get_pcr()),
+  tar_target(vacuna1, get_vacuna1()),
+  tar_target(vacuna2, get_vacuna2()),
   tar_target(r_systrom, get_r_systrom(casos)),
   tar_target(r_cislaghi, get_r_cislaghi(casos)),
   tar_target(r_jrc, get_r_jrc(casos)),

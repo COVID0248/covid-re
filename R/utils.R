@@ -151,9 +151,66 @@ get_pcr <- function() {
       codigo_semana = date_to_sepi(fecha)
     ) %>%
     dplyr::group_by(codigo_region, codigo_semana) %>%
-    dplyr::summarise(pcr = sum(numero), .groups = "drop") %>%
+    dplyr::summarise(
+      pcr_lag0 = sum(numero), 
+      .groups  = "drop"
+    ) %>%
     dplyr::arrange(codigo_region, codigo_semana) %>%
+    dplyr::group_by(codigo_region) %>%
+    dplyr::mutate(
+      pcr_lag1 = dplyr::lag(pcr_lag0, n = 1),
+      pcr_lag2 = dplyr::lag(pcr_lag0, n = 2)
+    ) %>%
+    dplyr::ungroup() %>%
     tibble::as_tibble()
+}
+
+get_vacuna1 <- function() {
+  data <-
+    "https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/" %>%
+    paste0("/output/producto80/vacunacion_comuna_1eraDosis_std.csv") %>%
+    read.csv() %>%
+    dplyr::mutate(
+      codigo_comuna = Codigo.comuna,
+      codigo_semana = date_to_sepi(Fecha)
+    ) %>%
+    dplyr::group_by(codigo_comuna, codigo_semana) %>%
+    dplyr::summarise(
+      vacuna1_lag0 = sum(Primera.Dosis),
+      .groups      = "drop"
+    ) %>%
+    dplyr::arrange(codigo_comuna, codigo_semana) %>%
+    dplyr::group_by(codigo_comuna) %>%
+    dplyr::mutate(
+      vacuna1_lag1 = dplyr::lag(vacuna1_lag0, n = 1),
+      vacuna1_lag2 = dplyr::lag(vacuna1_lag0, n = 2)
+    ) %>%
+    dplyr::ungroup() %>%
+    dplyr::as_tibble()
+}
+
+get_vacuna2 <- function() {
+  data <-
+    "https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/" %>%
+    paste0("/output/producto80/vacunacion_comuna_2daDosis_std.csv") %>%
+    read.csv() %>%
+    dplyr::mutate(
+      codigo_comuna = Codigo.comuna,
+      codigo_semana = date_to_sepi(Fecha)
+    ) %>%
+    dplyr::group_by(codigo_comuna, codigo_semana) %>%
+    dplyr::summarise(
+      vacuna2_lag0 = sum(Segunda.Dosis),
+      .groups      = "drop"
+    ) %>%
+    dplyr::arrange(codigo_comuna, codigo_semana) %>%
+    dplyr::group_by(codigo_comuna) %>%
+    dplyr::mutate(
+      vacuna2_lag1 = dplyr::lag(vacuna2_lag0, n = 1),
+      vacuna2_lag2 = dplyr::lag(vacuna2_lag0, n = 2)
+    ) %>%
+    dplyr::ungroup() %>%
+    dplyr::as_tibble()
 }
 
 get_r_systrom <- function(data) {
@@ -261,9 +318,9 @@ get_df <- function(df_r, df_pasos, df_comunas) {
   dplyr::mutate(
     comuna_fct = as.factor(codigo_comuna),
     region_fct = as.factor(codigo_region),
-    paso_l1    = as.factor(dplyr::lag(paso, 1)),
-    paso_l3    = as.factor(dplyr::lag(paso, 3)),
-    paso_l5    = as.factor(dplyr::lag(paso, 5))
+    paso_lag1    = as.factor(dplyr::lag(paso, 1)),
+    paso_lag3    = as.factor(dplyr::lag(paso, 3)),
+    paso_lag5    = as.factor(dplyr::lag(paso, 5))
   ) %>%
   dplyr::ungroup() %>%
   dplyr::select(
@@ -280,9 +337,9 @@ get_df <- function(df_r, df_pasos, df_comunas) {
     puerto,
     idse,
     indice_ruralidad,
-    paso_l1,
-    paso_l3,
-    paso_l5
+    paso_lag1,
+    paso_lag3,
+    paso_lag5
   ) %>%
   na.omit()
 }
@@ -297,9 +354,9 @@ get_fit <- function(df) {
     "puerto",
     "idse",
     "indice_ruralidad",
-    "paso_l1",
-    "paso_l3",
-    "paso_l5"
+    "paso_lag1",
+    "paso_lag3",
+    "paso_lag5"
   )
   mystepwise(
     yvar0    = "r",
