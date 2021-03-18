@@ -213,7 +213,7 @@ get_vacuna2 <- function() {
     dplyr::as_tibble()
 }
 
-get_cuarentena <- function() {
+get_cuarentenas <- function() {
   cuarentenas <-
     "https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/" %>%
     paste0("/output/producto29/Cuarentenas-Totales.csv") %>%
@@ -336,21 +336,21 @@ get_r_wallinga <- function(data) {
     tibble::as_tibble()
 }
 
-get_r <- function(data_list) {
+get_r <- function(...) {
   r_final <-
-    data_list %>%
+    list(...) %>%
     dplyr::bind_rows() %>%
     dplyr::select(-c(n, casos_nuevos)) %>%
     dplyr::ungroup()
 }
 
-get_df <- function(df_r, df_pasos, df_comunas) {
-  df_r %>%
-  dplyr::inner_join(df_pasos) %>%
-  dplyr::inner_join(df_comunas) %>%
-  dplyr::arrange(codigo_comuna, codigo_semana) %>%
+get_df <- function(df_r, ...) {
+  df <- 
+    list(df_r, ...) %>%
+    purrr::reduce(dplyr::left_join) %>%
+    dplyr::arrange(codigo_comuna, codigo_semana) %>%
   dplyr::mutate(across(
-    c(idse, inmigrantes, densidad_poblacional), 
+    c(idse, inmigrantes, densidad_poblacional),
     ~ .x / max(.x, na.rm = TRUE)
   )) %>%
   dplyr::group_by(codigo_comuna) %>%
@@ -382,7 +382,7 @@ get_df <- function(df_r, df_pasos, df_comunas) {
   ) %>%
   na.omit()
 }
-  
+
 get_fit <- function(df) {
   covariates <- c(
     "capital_regional",
@@ -414,8 +414,3 @@ get_cov <- function(fit) {
 get_b <- function(fit) {
   broom.mixed::tidy(fit, effects = "fixed")
 }
-
-# Probar rezagos más grandes (5)
-# Añadr espacios entre los rezagos (e.g. 1, 3, 5)
-# Añadir un par de gráficos comparando el R con las variables que queden en el modelo
-# Buscar variables que varíen en el tiempo
