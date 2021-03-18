@@ -167,7 +167,11 @@ get_r_systrom <- function(data) {
       I      = array(data$casos_nuevos, c(Ntimes, Nareas))
     )
   stan_model <- rstan::stan_model("stan/systrom.stan")
-  stan_fit   <- rstan::sampling(object = stan_model, data = stan_data)
+  stan_fit <- rstan::sampling(
+    object = stan_model, 
+    data   = stan_data, 
+    seed   = 1L
+  )
   
   re_systrom <-
     data %>%
