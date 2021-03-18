@@ -1,7 +1,7 @@
-FROM rocker/verse:4.0.3 AS dev
-RUN eval "$(ssh-agent -s)"
-RUN ssh-add ~/.ssh/id_rsa
-RUN ssh -T git@github.com
+# Setup git in the container
+# eval "$(ssh-agent -s)"
+# ssh-add ~/.ssh/id_rsa
+# ssh -T git@github.com
 
 # Build and run for development
 # docker build --target dev -t covid-re:dev .
@@ -15,4 +15,4 @@ RUN ssh -T git@github.com
 #     -v $HOME/.gitconfig:/home/rstudio/.gitconfig \
 #     -v $HOME/.aws:/home/rstudio/.aws \
 #     -v $HOME/.ssh:/home/rstudio/.ssh \
-#     covid-re:dev
+#     rocker/verse:4.0.3
