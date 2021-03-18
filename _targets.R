@@ -1,5 +1,6 @@
 library(targets)
 library(magrittr)
+library(dbplyr)
 library(rstan)
 source("R/utils.R")
 rstan::rstan_options(auto_write = TRUE)
