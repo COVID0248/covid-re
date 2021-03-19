@@ -120,6 +120,7 @@ get_pcr <- function(comunas) {
     dplyr::inner_join(pob_region) %>%
     dplyr::mutate(pcr = pcr / poblacion) %>%
     dplyr::arrange(codigo_region, codigo_semana) %>%
+    dplyr::select(-poblacion) %>%
     tibble::as_tibble()
 }
 
@@ -303,6 +304,7 @@ get_df <- function(df_r, ...) {
     list(df_r, ...) %>%
     purrr::reduce(dplyr::left_join) %>%
     tidyr::replace_na(list(
+      pcr        = 0,
       vacunados1 = 0, 
       vacunados2 = 0,
       cuarentena = FALSE
@@ -323,7 +325,8 @@ get_df <- function(df_r, ...) {
       !!!lags(vacunados1, 5),
       !!!lags(vacunados2, 5),
       !!!lags(paso, 5),
-      !!!lags(pvc, 5)
+      !!!lags(pvc, 5),
+      !!!lags(pcr, 5)
     ) %>%
     dplyr::ungroup() %>%
     dplyr::select(
@@ -340,53 +343,8 @@ get_df <- function(df_r, ...) {
       idse,
       indice_ruralidad,
       dplyr::contains("lag")
-    ) #%>%
-  # na.omit()
-  
-  
-  
-
-  
-  
-    # dplyr::group_by(codigo_comuna) %>%
-    # dplyr::mutate(
-    #   comuna_fct = as.factor(codigo_comuna),
-    #   region_fct = as.factor(codigo_region)
-    # )
-  
-  # purrr::reduce(
-  #   1:4,
-  #   ~ dplyr::mutate(., dplyr::across(
-  #     .cols  = c(paso, vacuna1, vacuna2),
-  #     .fns   = ~dplyr::lag(.x, n = 1),
-  #     .names = "{.col}_lag"
-  #   ))
-  # )
-  
-  
-  # paso_lag1  = as.factor(dplyr::lag(paso, 1)),
-  # paso_lag3  = as.factor(dplyr::lag(paso, 3)),
-  # paso_lag5  = as.factor(dplyr::lag(paso, 5))
-  # dplyr::ungroup() #%>%
-  # dplyr::select(
-  #   r,
-  #   codigo_semana,
-  #   region_fct,
-  #   comuna_fct,
-  #   comuna,
-  #   capital_regional,
-  #   capital_provincial,
-  #   pob_20_a_64,
-  #   inmigrantes,
-  #   aeropuerto,
-  #   puerto,
-  #   idse,
-  #   indice_ruralidad,
-  #   paso_lag1,
-  #   paso_lag3,
-  #   paso_lag5
-  # ) %>%
-  # na.omit()
+    ) %>%
+    na.omit()
 }
 
 get_fit <- function(df) {
