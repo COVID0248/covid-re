@@ -55,6 +55,7 @@ mystepwise <- function(yvar0, xvar0, preserve, max_pval, random, data) {
 
 long_boxplot <- function(data, varname) {
   data %>%
+    dplyr::filter(codigo_semana != max(codigo_semana)) %>%
     dplyr::mutate(codigo_semana = as.factor(codigo_semana)) %>%
     ggplot2::ggplot(aes(codigo_semana, .data[[varname]])) +
     ggplot2::geom_boxplot() +
