@@ -308,33 +308,33 @@ get_df <- function(df_r, ...) {
         .cols = c(pob_20_a_64, inmigrantes, vacunados1, vacunados2),
         .fns  = ~ .x / poblacion
       ),
-      dplyr::across(c(codigo_comuna, codigo_region), as.factor)
+      dplyr::across(c(codigo_comuna, codigo_region, paso), as.factor)
+    ) %>%
+    dplyr::arrange(codigo_comuna, codigo_semana) %>%
+    dplyr::group_by(codigo_comuna) %>%
+    dplyr::mutate(
+      !!!lags(vacunados1, 5),
+      !!!lags(vacunados2, 5),
+      !!!lags(paso, 5),
+      !!!lags(pvc, 5)
+    ) %>%
+    dplyr::ungroup() %>%
+    dplyr::select(
+      r,
+      codigo_semana,
+      codigo_comuna,
+      codigo_region,
+      capital_regional,
+      capital_provincial,
+      pob_20_a_64,
+      inmigrantes,
+      aeropuerto,
+      puerto,
+      idse,
+      indice_ruralidad,
+      dplyr::contains("lag")
     ) #%>%
-    # dplyr::arrange(codigo_comuna, codigo_semana) %>%
-    # dplyr::group_by(codigo_comuna) %>%
-    # dplyr::mutate(
-    #   !!!lags(vacunados1, 5),
-    #   !!!lags(vacunados2, 5),
-    #   !!!lags(paso, 5),
-    #   !!!lags(pvc, 5)
-    # ) %>%
-    # dplyr::ungroup() %>%
-    # dplyr::select(
-    #   r,
-    #   codigo_semana,
-    #   codigo_comuna,
-    #   codigo_region,
-    #   capital_regional,
-    #   capital_provincial,
-    #   pob_20_a_64,
-    #   inmigrantes,
-    #   aeropuerto,
-    #   puerto,
-    #   idse,
-    #   indice_ruralidad,
-    #   dplyr::contains("lag")
-    # ) #%>%
-  # na.omit()    
+  # na.omit()
   
   
   
