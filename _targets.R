@@ -5,6 +5,7 @@ suppressMessages(library(rstan))
 rstan::rstan_options(auto_write = TRUE)
 options(mc.cores = parallel::detectCores())
 source("R/utils.R")
+source("R/targets.R")
 
 list(
   tar_target(vecinos, "data/vecinos.rds", format = "file"),
@@ -15,27 +16,27 @@ list(
   tar_target(pasos, get_pasos()),
   tar_target(casos, get_casos()),
   tar_target(pcr, get_pcr()),
-  tar_target(vacuna1, get_vacuna1()),
-  tar_target(vacuna2, get_vacuna2()),
+  tar_target(vacunados1, get_vacunados1()),
+  tar_target(vacunados2, get_vacunados2()),
   tar_target(cuarentenas, get_cuarentenas()),
-  tar_target(vacaciones, get_vacaciones()),
-  tar_target(r_systrom, get_r_systrom(casos)),
-  tar_target(r_cislaghi, get_r_cislaghi(casos)),
-  tar_target(r_jrc, get_r_jrc(casos)),
-  tar_target(r_rki, get_r_rki(casos)),
-  tar_target(r_wallinga, get_r_wallinga(casos)),
-  tar_target(r, get_r(r_systrom, r_cislaghi, r_jrc, r_rki, r_wallinga)),
-  targets::tar_target(df, get_df(
-    r_wallinga,
-    comunas,
-    pasos,
-    casos,
-    pcr,
-    vacuna1,
-    vacuna2,
-    cuarentenas,
-    vacaciones
-  ))#,  
+  tar_target(vacaciones, get_vacaciones())#,
+  # tar_target(r_systrom, get_r_systrom(casos)),
+  # tar_target(r_cislaghi, get_r_cislaghi(casos)),
+  # tar_target(r_jrc, get_r_jrc(casos)),
+  # tar_target(r_rki, get_r_rki(casos)),
+  # tar_target(r_wallinga, get_r_wallinga(casos)),
+  # tar_target(r, get_r(r_systrom, r_cislaghi, r_jrc, r_rki, r_wallinga)),
+  # targets::tar_target(df, get_df(
+  #   r_wallinga,
+  #   comunas,
+  #   pasos,
+  #   casos,
+  #   pcr,
+  #   vacunados1,
+  #   vacunados2,
+  #   cuarentenas,
+  #   vacaciones
+  # ))#,  
   # targets::tar_target(fit, get_fit(df)),
   # targets::tar_target(cov, get_cov(fit)),
   # targets::tar_target(b, get_b(fit))
