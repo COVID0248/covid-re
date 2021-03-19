@@ -126,8 +126,8 @@ get_vacunados1 <- function() {
       codigo_semana = date_to_sepi(Fecha)
     ) %>%
     dplyr::group_by(codigo_comuna, codigo_semana) %>%
-    dplyr::summarise(vacunados1 = sum(Primera.Dosis), .groups = "drop") %>%
-    dplyr::arrange(codigo_comuna, codigo_semana) %>%
+    dplyr::summarise(vacunados1 = sum(Primera.Dosis)) %>%
+    dplyr::mutate(vacunados1 = cumsum(vacunados1)) %>%
     dplyr::as_tibble()
 }
 
@@ -141,8 +141,8 @@ get_vacunados2 <- function() {
       codigo_semana = date_to_sepi(Fecha)
     ) %>%
     dplyr::group_by(codigo_comuna, codigo_semana) %>%
-    dplyr::summarise(vacunados2 = sum(Segunda.Dosis), .groups = "drop") %>%
-    dplyr::arrange(codigo_comuna, codigo_semana) %>%
+    dplyr::summarise(vacunados2 = sum(Segunda.Dosis)) %>%
+    dplyr::mutate(vacunados2 = cumsum(vacunados2)) %>%
     dplyr::as_tibble()
 }
 
