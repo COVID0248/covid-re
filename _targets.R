@@ -24,9 +24,7 @@ list(
   tar_target(r_jrc, get_r_jrc(casos)),
   tar_target(r_rki, get_r_rki(casos)),
   tar_target(r_wallinga, get_r_wallinga(casos)),
-  tar_target(r, get_r(
-    r_systrom, r_cislaghi, r_jrc, r_rki, r_wallinga
-  )),
+  tar_target(r, get_r(r_systrom, r_cislaghi, r_jrc, r_rki, r_wallinga)),
   targets::tar_target(df, get_df(
     r_wallinga,
     comunas,
@@ -37,8 +35,8 @@ list(
     vacuna2,
     cuarentenas,
     vacaciones
-  )),  
-  targets::tar_target(fit, get_fit(df)),
-  targets::tar_target(cov, get_cov(fit)),
-  targets::tar_target(b, get_b(fit))
+  ))#,  
+  # targets::tar_target(fit, get_fit(df)),
+  # targets::tar_target(cov, get_cov(fit)),
+  # targets::tar_target(b, get_b(fit))
 )

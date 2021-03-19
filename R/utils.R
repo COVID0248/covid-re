@@ -181,7 +181,7 @@ get_vacuna2 <- function() {
       codigo_semana = date_to_sepi(Fecha)
     ) %>%
     dplyr::group_by(codigo_comuna, codigo_semana) %>%
-    dplyr::summarise(vacuna2_lag0 = sum(Segunda.Dosis), .groups = "drop") %>%
+    dplyr::summarise(vacuna2 = sum(Segunda.Dosis), .groups = "drop") %>%
     dplyr::arrange(codigo_comuna, codigo_semana) %>%
     dplyr::as_tibble()
 }
@@ -321,39 +321,58 @@ get_df <- function(df_r, ...) {
   df <- 
     list(df_r, ...) %>%
     purrr::reduce(dplyr::left_join) %>%
+    tidyr::replace_na(list(
+      vacuna1    = 0, 
+      vacuna2    = 0,
+      cuarentena = FALSE
+    )) %>%
+    dplyr::mutate(
+      paso = dplyr::if_else(is.na(paso), 4L - 3L * cuarentena, paso),
+      across(
+        c(idse, inmigrantes, densidad_poblacional),
+        ~ .x / max(.x, na.rm = TRUE)
+      )
+    ) %>%
     dplyr::arrange(codigo_comuna, codigo_semana) %>%
-  dplyr::mutate(across(
-    c(idse, inmigrantes, densidad_poblacional),
-    ~ .x / max(.x, na.rm = TRUE)
-  )) %>%
-  dplyr::group_by(codigo_comuna) %>%
-  dplyr::mutate(
-    comuna_fct = as.factor(codigo_comuna),
-    region_fct = as.factor(codigo_region),
-    paso_lag1    = as.factor(dplyr::lag(paso, 1)),
-    paso_lag3    = as.factor(dplyr::lag(paso, 3)),
-    paso_lag5    = as.factor(dplyr::lag(paso, 5))
-  ) %>%
-  dplyr::ungroup() %>%
-  dplyr::select(
-    r,
-    codigo_semana,
-    region_fct,
-    comuna_fct,
-    comuna,
-    capital_regional,
-    capital_provincial,
-    pob_20_a_64,
-    inmigrantes,
-    aeropuerto,
-    puerto,
-    idse,
-    indice_ruralidad,
-    paso_lag1,
-    paso_lag3,
-    paso_lag5
-  ) %>%
-  na.omit()
+    dplyr::group_by(codigo_comuna) %>%
+    dplyr::mutate(
+      comuna_fct = as.factor(codigo_comuna),
+      region_fct = as.factor(codigo_region)
+    )
+
+    # purrr::reduce(
+    #   1:4,
+    #   ~ dplyr::mutate(., dplyr::across(
+    #     .cols  = c(paso, vacuna1, vacuna2),
+    #     .fns   = ~dplyr::lag(.x, n = 1),
+    #     .names = "{.col}_lag"
+    #   ))
+    # )
+      
+      
+      # paso_lag1  = as.factor(dplyr::lag(paso, 1)),
+      # paso_lag3  = as.factor(dplyr::lag(paso, 3)),
+      # paso_lag5  = as.factor(dplyr::lag(paso, 5))
+    # dplyr::ungroup() #%>%
+    # dplyr::select(
+    #   r,
+    #   codigo_semana,
+    #   region_fct,
+    #   comuna_fct,
+    #   comuna,
+    #   capital_regional,
+    #   capital_provincial,
+    #   pob_20_a_64,
+    #   inmigrantes,
+    #   aeropuerto,
+    #   puerto,
+    #   idse,
+    #   indice_ruralidad,
+    #   paso_lag1,
+    #   paso_lag3,
+    #   paso_lag5
+    # ) %>%
+    # na.omit()
 }
 
 get_fit <- function(df) {
@@ -387,3 +406,8 @@ get_cov <- function(fit) {
 get_b <- function(fit) {
   broom.mixed::tidy(fit, effects = "fixed")
 }
+
+# TODO:
+# 1. Añadir lags de paso, vacuna1, vacuna2
+# 2. Covertir vacuna1, vacuna2 en porcentajes.
+# 3. Cacular el porcentaje de población en fase 1 en las comunas vecinas.
