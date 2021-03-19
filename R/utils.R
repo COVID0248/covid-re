@@ -29,10 +29,10 @@ date_to_sepi <- function(x) {
 }
 
 lags <- function(var, n = 10){
-  var <- enquo(var)
+  var <- dplyr::enquo(var)
   indices <- seq_len(n)
-  purrr::map(indices, ~quo(lag(!!var, !!.x)) ) %>% 
-    purrr::set_names(sprintf("%s_lag%02d", rlang::quo_text(var), indices))
+  purrr::map(indices, ~dplyr::quo(dplyr::lag(!!var, !!.x)) ) %>% 
+    purrr::set_names(sprintf("%s_lag%01d", rlang::quo_text(var), indices))
 }
 
 mystepwise <- function(yvar0, xvar0, preserve, max_pval, random, data) {
