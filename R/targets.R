@@ -185,7 +185,7 @@ get_pvc <- function(poblacion, vecinos, cuarentenas, pasos) {
     ) %>%
     dplyr::arrange(codigo_semana, codigo_vecino) %>%
     dplyr::group_by(codigo_semana, codigo_vecino) %>%
-    dplyr::summarise(pvc = sum(poblacion * (paso == 1))) %>%
+    dplyr::summarise(pvc = sum(poblacion * (paso == 1)) / sum(poblacion)) %>%
     dplyr::rename(codigo_comuna = codigo_vecino) %>%
     dplyr::arrange(codigo_comuna, codigo_semana)
 }
@@ -305,14 +305,37 @@ get_df <- function(df_r, ...) {
       idse = idse / 1000,
       densidad_1em4 = densidad_poblacional * 1e-4,
       across(
-        .cols  = c(inmigrantes, vacunados1, vacunados2, pvc),
-        .funs  = ~ .x / poblacion,
-        .names = "pp_{.col}"
+        .cols = c(pob_20_a_64, inmigrantes, vacunados1, vacunados2),
+        .fns  = ~ .x / poblacion
       ),
-      dplyr::across(c/codigo_comuna, codigo_region, as.factor)
-    ) %>%
-    dplyr::arrange(codigo_comuna, codigo_semana) #%>%
-
+      dplyr::across(c(codigo_comuna, codigo_region), as.factor)
+    ) #%>%
+    # dplyr::arrange(codigo_comuna, codigo_semana) %>%
+    # dplyr::group_by(codigo_comuna) %>%
+    # dplyr::mutate(
+    #   !!!lags(vacunados1, 5),
+    #   !!!lags(vacunados2, 5),
+    #   !!!lags(paso, 5),
+    #   !!!lags(pvc, 5)
+    # ) %>%
+    # dplyr::ungroup() %>%
+    # dplyr::select(
+    #   r,
+    #   codigo_semana,
+    #   codigo_comuna,
+    #   codigo_region,
+    #   capital_regional,
+    #   capital_provincial,
+    #   pob_20_a_64,
+    #   inmigrantes,
+    #   aeropuerto,
+    #   puerto,
+    #   idse,
+    #   indice_ruralidad,
+    #   dplyr::contains("lag")
+    # ) #%>%
+  # na.omit()    
+  
   
   
 
