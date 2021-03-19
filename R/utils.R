@@ -52,3 +52,11 @@ mystepwise <- function(yvar0, xvar0, preserve, max_pval, random, data) {
   fmla <- paste0(yvar0, " ~ ", paste(xvar0, collapse = "+"), " + ", random)
   do.call(lme4::lmer, list(formula = as.formula(fmla), data = data))
 }
+
+long_boxplot <- function(data, varname) {
+  data %>%
+    dplyr::mutate(codigo_semana = as.factor(codigo_semana)) %>%
+    ggplot2::ggplot(aes(codigo_semana, .data[[varname]])) +
+    ggplot2::geom_boxplot() +
+    ggplot2::theme_classic()
+}
