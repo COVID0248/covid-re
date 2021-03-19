@@ -58,6 +58,10 @@ get_comunas <- function(conn, inmigrantes, pob_20_64) {
     dplyr::inner_join(pob_20_64)
 }
 
+get_poblacion <- function(comunas) {
+  dplyr::select(comunas, codigo_comuna, poblacion)
+}
+
 get_pasos <- function() {
   data <-
     "https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master" %>%
@@ -167,6 +171,10 @@ get_cuarentenas <- function() {
     ) %>%
     dplyr::select(codigo_comuna, codigo_semana, cuarentena)
 }
+
+# get_pp_pvc <- function(pob, cuarentenas) {
+#   
+# }
 
 get_vacaciones <- function() {
   inicio  <- date_to_sepi(as.Date("2021-01-01"))
