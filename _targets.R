@@ -16,7 +16,7 @@ list(
   tar_target(poblacion, get_poblacion(comunas)),
   tar_target(pasos, get_pasos()),
   tar_target(casos, get_casos()),
-  tar_target(pcr, get_pcr()),
+  tar_target(pcr, get_pcr(comunas)),
   tar_target(vacunados1, get_vacunados1()),
   tar_target(vacunados2, get_vacunados2()),
   tar_target(cuarentenas, get_cuarentenas()),

@@ -101,7 +101,12 @@ get_casos <- function() {
     tibble::as_tibble()
 }
 
-get_pcr <- function() {
+get_pcr <- function(comunas) {
+  pob_region <-
+    comunas %>%
+    dplyr::group_by(codigo_region) %>%
+    dplyr::summarise(poblacion = sum(poblacion))
+    
   data <-
     "https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master" %>%
     paste0("/output/producto7/PCR_std.csv") %>%
@@ -112,6 +117,8 @@ get_pcr <- function() {
     ) %>%
     dplyr::group_by(codigo_region, codigo_semana) %>%
     dplyr::summarise(pcr = sum(numero), .groups = "drop") %>%
+    dplyr::inner_join(pob_region) %>%
+    dplyr::mutate(pcr = pcr / poblacion) %>%
     dplyr::arrange(codigo_region, codigo_semana) %>%
     tibble::as_tibble()
 }
