@@ -10,6 +10,10 @@ get_conn <- function() {
     )
 }
 
+get_vecinos <- function() {
+  readRDS("data/vecinos.rds")
+}
+
 get_pob_20_64 <- function(conn) {
   conn %>%
     dplyr::tbl("poblacion_edad") %>% 
@@ -172,9 +176,19 @@ get_cuarentenas <- function() {
     dplyr::select(codigo_comuna, codigo_semana, cuarentena)
 }
 
-# get_pp_pvc <- function(pob, cuarentenas) {
-#   
-# }
+get_pvc <- function(poblacion, vecinos, cuarentenas, pasos) {
+  pvc <- 
+    list(cuarentenas, pasos, poblacion, vecinos) %>%
+    purrr::reduce(dplyr::full_join) %>%
+    dplyr::mutate(
+      paso = dplyr::if_else(is.na(paso), 4L - 3L * cuarentena, paso)
+    ) %>%
+    dplyr::arrange(codigo_semana, codigo_vecino) %>%
+    dplyr::group_by(codigo_semana, codigo_vecino) %>%
+    dplyr::summarise(pvc = sum(poblacion * (paso == 1))) %>%
+    dplyr::rename(codigo_comuna = codigo_vecino) %>%
+    dplyr::arrange(codigo_comuna, codigo_semana)
+}
 
 get_vacaciones <- function() {
   inicio  <- date_to_sepi(as.Date("2021-01-01"))
@@ -282,23 +296,33 @@ get_df <- function(df_r, ...) {
     list(df_r, ...) %>%
     purrr::reduce(dplyr::left_join) %>%
     tidyr::replace_na(list(
-      vacuna1    = 0, 
-      vacuna2    = 0,
+      vacunados1 = 0, 
+      vacunados2 = 0,
       cuarentena = FALSE
     )) %>%
     dplyr::mutate(
       paso = dplyr::if_else(is.na(paso), 4L - 3L * cuarentena, paso),
+      idse = idse / 1000,
+      densidad_1em4 = densidad_poblacional * 1e-4,
       across(
-        c(idse, inmigrantes, densidad_poblacional),
-        ~ .x / max(.x, na.rm = TRUE)
-      )
+        .cols  = c(inmigrantes, vacunados1, vacunados2, pvc),
+        .funs  = ~ .x / poblacion,
+        .names = "pp_{.col}"
+      ),
+      dplyr::across(c/codigo_comuna, codigo_region, as.factor)
     ) %>%
-    dplyr::arrange(codigo_comuna, codigo_semana) %>%
-    dplyr::group_by(codigo_comuna) %>%
-    dplyr::mutate(
-      comuna_fct = as.factor(codigo_comuna),
-      region_fct = as.factor(codigo_region)
-    )
+    dplyr::arrange(codigo_comuna, codigo_semana) #%>%
+
+  
+  
+
+  
+  
+    # dplyr::group_by(codigo_comuna) %>%
+    # dplyr::mutate(
+    #   comuna_fct = as.factor(codigo_comuna),
+    #   region_fct = as.factor(codigo_region)
+    # )
   
   # purrr::reduce(
   #   1:4,
@@ -369,5 +393,3 @@ get_b <- function(fit) {
 
 # TODO:
 # 1. Añadir lags de paso, vacuna1, vacuna2
-# 2. Covertir vacuna1, vacuna2 en porcentajes.
-# 3. Cacular el porcentaje de población en fase 1 en las comunas vecinas.
