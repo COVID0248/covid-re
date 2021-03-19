@@ -357,15 +357,17 @@ get_fit <- function(df) {
     "puerto",
     "idse",
     "indice_ruralidad",
-    "paso_lag1",
-    "paso_lag3",
-    "paso_lag5"
+    paste0("paso_lag", 1:5),
+    paste0("vacunados1_lag", 1:5),
+    paste0("vacunados2_lag", 1:5),
+    paste0("pvc_lag", 1:5),
+    paste0("pcr_lag", 1:5)
   )
   mystepwise(
     yvar0    = "r",
     xvar0    = covariates,
     preserve = "",
-    random   = "(1 | region_fct / comuna_fct)",
+    random   = "(1 | codigo_region / codigo_comuna)",
     max_pval = 0.1,
     data     = df
   )
@@ -378,6 +380,3 @@ get_cov <- function(fit) {
 get_b <- function(fit) {
   broom.mixed::tidy(fit, effects = "fixed")
 }
-
-# TODO:
-# 1. Añadir lags de paso, vacuna1, vacuna2
