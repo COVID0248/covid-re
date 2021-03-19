@@ -151,17 +151,8 @@ get_pcr <- function() {
       codigo_semana = date_to_sepi(fecha)
     ) %>%
     dplyr::group_by(codigo_region, codigo_semana) %>%
-    dplyr::summarise(
-      pcr_lag0 = sum(numero), 
-      .groups  = "drop"
-    ) %>%
+    dplyr::summarise(pcr = sum(numero), .groups = "drop") %>%
     dplyr::arrange(codigo_region, codigo_semana) %>%
-    dplyr::group_by(codigo_region) %>%
-    dplyr::mutate(
-      pcr_lag1 = dplyr::lag(pcr_lag0, n = 1),
-      pcr_lag2 = dplyr::lag(pcr_lag0, n = 2)
-    ) %>%
-    dplyr::ungroup() %>%
     tibble::as_tibble()
 }
 
@@ -175,17 +166,8 @@ get_vacuna1 <- function() {
       codigo_semana = date_to_sepi(Fecha)
     ) %>%
     dplyr::group_by(codigo_comuna, codigo_semana) %>%
-    dplyr::summarise(
-      vacuna1_lag0 = sum(Primera.Dosis),
-      .groups      = "drop"
-    ) %>%
+    dplyr::summarise(vacuna1 = sum(Primera.Dosis), .groups = "drop") %>%
     dplyr::arrange(codigo_comuna, codigo_semana) %>%
-    dplyr::group_by(codigo_comuna) %>%
-    dplyr::mutate(
-      vacuna1_lag1 = dplyr::lag(vacuna1_lag0, n = 1),
-      vacuna1_lag2 = dplyr::lag(vacuna1_lag0, n = 2)
-    ) %>%
-    dplyr::ungroup() %>%
     dplyr::as_tibble()
 }
 
@@ -199,17 +181,8 @@ get_vacuna2 <- function() {
       codigo_semana = date_to_sepi(Fecha)
     ) %>%
     dplyr::group_by(codigo_comuna, codigo_semana) %>%
-    dplyr::summarise(
-      vacuna2_lag0 = sum(Segunda.Dosis),
-      .groups      = "drop"
-    ) %>%
+    dplyr::summarise(vacuna2_lag0 = sum(Segunda.Dosis), .groups = "drop") %>%
     dplyr::arrange(codigo_comuna, codigo_semana) %>%
-    dplyr::group_by(codigo_comuna) %>%
-    dplyr::mutate(
-      vacuna2_lag1 = dplyr::lag(vacuna2_lag0, n = 1),
-      vacuna2_lag2 = dplyr::lag(vacuna2_lag0, n = 2)
-    ) %>%
-    dplyr::ungroup() %>%
     dplyr::as_tibble()
 }
 
