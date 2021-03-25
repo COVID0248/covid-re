@@ -17,4 +17,4 @@ Una vez construido este proyecto, puede invocar cualquier target (e.g. `r`), eje
 targets::tar_read("r")
 ```
 
-Todos los targets está en `_targets.R`, mientras que las funciones llamadas por estos están en `R/targets.R`. 
+Todos los targets están en `_targets.R`, mientras que las funciones llamadas por estos están en `R/targets.R`. 
