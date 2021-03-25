@@ -1,6 +1,6 @@
 # covid-re
 
-Estimación del efecto de un cambio de fase en el plan paso a paso sobre distintas medidas del R efectivo.
+Estimación (preliminar) del efecto de un cambio de fase en el plan paso a paso sobre distintas medidas del R efectivo.
 
 # Construcción
 
@@ -17,4 +17,4 @@ Una vez construido este proyecto, puede invocar cualquier target (e.g. `r`), eje
 targets::tar_read("r")
 ```
 
-El listado de todos los targets está en `_targets.R`, mientras que las funciones llamadas para producirlos están en `R/targets.R`. 
+Todos los targets está en `_targets.R`, mientras que las funciones llamadas por estos están en `R/targets.R`. 
