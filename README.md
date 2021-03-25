@@ -1,6 +1,6 @@
 # covid-re
 
-Estimación (preliminar) del efecto de un cambio de fase en el plan paso a paso sobre distintas medidas del R efectivo.
+Estimación (preliminar) del efecto de las fases del plan paso a paso sobre distintas medidas del R efectivo.
 
 # Construcción
 
