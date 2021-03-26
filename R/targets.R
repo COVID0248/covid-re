@@ -181,7 +181,8 @@ get_cuarentenas <- function() {
     dplyr::mutate(
       cuarentena = codigo_semana >= inicio & codigo_semana <= termino
     ) %>%
-    dplyr::select(codigo_comuna, codigo_semana, cuarentena)
+    dplyr::group_by(codigo_comuna, codigo_semana) %>%
+    dplyr::summarise(cuarentena = max(cuarentena), .groups = NULL)
 }
 
 get_pvc <- function(poblacion, vecinos, cuarentenas, pasos) {
