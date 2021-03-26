@@ -366,13 +366,6 @@
       "Repository": "RSPM",
       "Hash": "7b1f856410253d56ea67ad808f7cdff6"
     },
-    "import": {
-      "Package": "import",
-      "Version": "1.2.0",
-      "Source": "Repository",
-      "Repository": "RSPM",
-      "Hash": "d387ef61b97f930c4737d59ab91a9885"
-    },
     "ini": {
       "Package": "ini",
       "Version": "0.3.1",

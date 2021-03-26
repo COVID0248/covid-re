@@ -2,6 +2,7 @@ suppressMessages(library(targets))
 suppressMessages(library(magrittr))
 suppressMessages(library(dbplyr))
 suppressMessages(library(rstan))
+suppressMessages(library(sf))
 rstan::rstan_options(auto_write = TRUE)
 options(mc.cores = parallel::detectCores())
 source("R/utils.R")
@@ -19,6 +20,9 @@ list(
   tar_target(pcr, get_pcr(comunas)),
   tar_target(vacunados1, get_vacunados1()),
   tar_target(vacunados2, get_vacunados2()),
+  tar_target(im_interno, get_im_interno()),
+  tar_target(im_externo, get_im_externo()),
+  tar_target(mp10, get_mp10()),
   tar_target(cuarentenas, get_cuarentenas()),
   tar_target(vacaciones, get_vacaciones()),
   tar_target(pvc, get_pvc(poblacion, vecinos, cuarentenas, pasos)),
@@ -38,7 +42,9 @@ list(
     vacunados2,
     vacaciones,
     pvc,
-    cuarentenas
+    cuarentenas,
+    im_interno,
+    im_externo
   )),
   targets::tar_target(fit, get_fit(df)),
   targets::tar_target(cov, get_cov(fit)),
@@ -48,5 +54,6 @@ list(
   targets::tar_target(plot_pcr, long_boxplot(pcr, "pcr")),
   targets::tar_target(plot_vacunados1, long_boxplot(vacunados1, "vacunados1")),
   targets::tar_target(plot_vacunados2, long_boxplot(vacunados2, "vacunados2")),
-  targets::tar_target(plot_casos, long_boxplot(casos, "casos_nuevos"))
+  targets::tar_target(plot_casos, long_boxplot(casos, "casos_nuevos")),
+  targets::tar_target(plot_rmed, get_plot_rmed(r))
 )

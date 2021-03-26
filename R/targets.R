@@ -154,6 +154,61 @@ get_vacunados2 <- function() {
     dplyr::as_tibble()
 }
 
+get_im_interno <- function() {
+  im_interno <-
+    "https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/" %>%
+    paste0("/output/producto33/IndiceDeMovilidad_std.csv") %>%
+    read.csv() %>%
+    dplyr::filter(variable == "IM") %>%
+    dplyr::mutate(
+      codigo_comuna = Codigo.comuna,
+      codigo_semana = date_to_sepi(Fecha)
+    ) %>%
+    dplyr::group_by(codigo_comuna, codigo_semana) %>%
+    dplyr::summarise(im_interno = mean(value), .groups = NULL) %>%
+    dplyr::arrange(codigo_comuna, codigo_semana)
+}
+
+get_im_externo <- function() {
+  im_externo <-
+    "https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/" %>%
+    paste0("/output/producto33/IndiceDeMovilidad_std.csv") %>%
+    read.csv() %>%
+    dplyr::filter(variable == "IM_externo") %>%
+    dplyr::mutate(
+      codigo_comuna = Codigo.comuna,
+      codigo_semana = date_to_sepi(Fecha)
+    ) %>%
+    dplyr::group_by(codigo_comuna, codigo_semana) %>%
+    dplyr::summarise(im_externo = mean(value), .groups = NULL) %>%
+    dplyr::arrange(codigo_comuna, codigo_semana)
+}
+
+get_mp10 <- function() {
+  data0 <-
+    "https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/" %>%
+    paste0("/output/producto43/MP10-2020_std.csv") %>%
+    read.csv() #%>%
+  
+  comunas <-
+    data0 %>%
+    dplyr::filter(Nombre.de.estacion == "Codigo region") %>%
+    dplyr::select(-Nombre.de.estacion) %>%
+    tidyr::pivot_longer(
+      dplyr::everything(), 
+      names_to = "comuna", 
+      values_to = "codigo_region"
+    )
+    # dplyr::filter(variable == "IM_externo") %>%
+    # dplyr::mutate(
+    #   codigo_comuna = Codigo.comuna,
+    #   codigo_semana = date_to_sepi(Fecha)
+    # ) %>%
+    # dplyr::group_by(codigo_comuna, codigo_semana) %>%
+    # dplyr::summarise(im_externo = mean(value), .groups = NULL) %>%
+    # dplyr::arrange(codigo_comuna, codigo_semana)
+}
+
 get_cuarentenas <- function() {
   cuarentenas <-
     "https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/" %>%
@@ -327,7 +382,9 @@ get_df <- function(df_r, ...) {
       !!!lags(vacunados2, 5),
       !!!lags(paso, 5),
       !!!lags(pvc, 5),
-      !!!lags(pcr, 5)
+      !!!lags(pcr, 5),
+      !!!lags(im_interno, 8),
+      !!!lags(im_externo, 8)
     ) %>%
     dplyr::ungroup() %>%
     dplyr::select(
@@ -363,7 +420,9 @@ get_fit <- function(df) {
     paste0("vacunados1_lag", 1:5),
     paste0("vacunados2_lag", 1:5),
     paste0("pvc_lag", 1:5),
-    paste0("pcr_lag", 1:5)
+    paste0("pcr_lag", 1:5),
+    paste0("im_interno_lag", 6:8),
+    paste0("im_externo_lag", 6:8)
   )
   mystepwise(
     yvar0    = "r",
@@ -381,4 +440,28 @@ get_cov <- function(fit) {
 
 get_b <- function(fit) {
   broom.mixed::tidy(fit, effects = "fixed")
+}
+
+get_plot_rmed <- function(r) {
+  df <-
+    r %>%
+    dplyr::group_by(codigo_comuna, method) %>%
+    dplyr::summarise(r = quantile(r, 0.5, na.rm = TRUE), .groups = NULL)
+
+  mapa <-
+    sf::st_read("data/mapa/mapa.shp", quiet = TRUE) %>%
+    dplyr::filter(
+      !(NOM_PROVIN %in% c("ANTÁRTICA CHILENA", "ISLA DE PASCUA")),
+      !(NOM_COMUNA %in% c("JUAN FERNANDEZ"))
+    ) %>%
+    sf::st_transform('+proj=longlat +datum=WGS84') %>%
+    dplyr::mutate(codigo_comuna = CUT) %>%
+    dplyr::inner_join(df)
+
+  ggplot2::ggplot(data = mapa) +
+    ggplot2::geom_sf(ggplot2::aes(fill = r), size = 0.1) +
+    ggplot2::facet_grid(cols = ggplot2::vars(method)) +
+    ggplot2::theme_void() +
+    ggplot2::scale_color_grey() +
+    ggplot2::labs(fill = "R efectivo")
 }
