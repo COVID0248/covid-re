@@ -331,6 +331,7 @@ get_df <- function(df_r, ...) {
     dplyr::ungroup() %>%
     dplyr::select(
       r,
+      casos_nuevos,
       codigo_semana,
       codigo_comuna,
       codigo_region,

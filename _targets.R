@@ -31,6 +31,7 @@ list(
   targets::tar_target(df, get_df(
     r_wallinga,
     comunas,
+    casos,
     pasos,
     pcr,
     vacunados1,
