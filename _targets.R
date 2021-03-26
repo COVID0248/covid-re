@@ -39,14 +39,14 @@ list(
     vacaciones,
     pvc,
     cuarentenas
-  ))#,
-  # targets::tar_target(fit, get_fit(df)),
-  # targets::tar_target(cov, get_cov(fit)),
-  # targets::tar_target(b, get_b(fit)),
-  # targets::tar_target(plot_r, long_boxplot(r_wallinga, "r")),
-  # targets::tar_target(plot_pvc, long_boxplot(pvc, "pvc")),
-  # targets::tar_target(plot_pcr, long_boxplot(pcr, "pcr")),
-  # targets::tar_target(plot_vacunados1, long_boxplot(vacunados1, "vacunados1")),
-  # targets::tar_target(plot_vacunados2, long_boxplot(vacunados2, "vacunados2")),
-  # targets::tar_target(plot_casos, long_boxplot(casos, "casos_nuevos"))
+  )),
+  targets::tar_target(fit, get_fit(df)),
+  targets::tar_target(cov, get_cov(fit)),
+  targets::tar_target(b, get_b(fit)),
+  targets::tar_target(plot_r, long_boxplot(r_wallinga, "r")),
+  targets::tar_target(plot_pvc, long_boxplot(pvc, "pvc")),
+  targets::tar_target(plot_pcr, long_boxplot(pcr, "pcr")),
+  targets::tar_target(plot_vacunados1, long_boxplot(vacunados1, "vacunados1")),
+  targets::tar_target(plot_vacunados2, long_boxplot(vacunados2, "vacunados2")),
+  targets::tar_target(plot_casos, long_boxplot(casos, "casos_nuevos"))
 )
