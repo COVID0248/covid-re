@@ -59,7 +59,8 @@ get_comunas <- function(conn, inmigrantes, pob_20_64) {
       codigo_region = cod_region
     ) %>%
     dplyr::inner_join(inmigrantes) %>%
-    dplyr::inner_join(pob_20_64)
+    dplyr::inner_join(pob_20_64) %>%
+    dplyr::filter(!is.na(codigo_region))
 }
 
 get_poblacion <- function(comunas) {
@@ -116,7 +117,7 @@ get_pcr <- function(comunas) {
       codigo_semana = date_to_sepi(fecha)
     ) %>%
     dplyr::group_by(codigo_region, codigo_semana) %>%
-    dplyr::summarise(pcr = sum(numero), .groups = "drop") %>%
+    dplyr::summarise(pcr = sum(numero, na.rm = TRUE), .groups = "drop") %>%
     dplyr::inner_join(pob_region) %>%
     dplyr::mutate(pcr = pcr / poblacion) %>%
     dplyr::arrange(codigo_region, codigo_semana) %>%
@@ -181,7 +182,8 @@ get_im_externo <- function() {
     ) %>%
     dplyr::group_by(codigo_comuna, codigo_semana) %>%
     dplyr::summarise(im_externo = mean(value), .groups = NULL) %>%
-    dplyr::arrange(codigo_comuna, codigo_semana)
+    dplyr::arrange(codigo_comuna, codigo_semana) %>%
+    na.omit()
 }
 
 get_mp10 <- function() {
@@ -199,17 +201,9 @@ get_mp10 <- function() {
       names_to = "comuna", 
       values_to = "codigo_region"
     )
-    # dplyr::filter(variable == "IM_externo") %>%
-    # dplyr::mutate(
-    #   codigo_comuna = Codigo.comuna,
-    #   codigo_semana = date_to_sepi(Fecha)
-    # ) %>%
-    # dplyr::group_by(codigo_comuna, codigo_semana) %>%
-    # dplyr::summarise(im_externo = mean(value), .groups = NULL) %>%
-    # dplyr::arrange(codigo_comuna, codigo_semana)
 }
 
-get_cuarentenas <- function() {
+get_cuarentenas <- function(comunas) {
   cuarentenas <-
     "https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/" %>%
     paste0("/output/producto29/Cuarentenas-Totales.csv") %>%
@@ -222,25 +216,33 @@ get_cuarentenas <- function() {
     dplyr::select(codigo_comuna, inicio, termino)
   
   comunas <-
-    cuarentenas %$%
     expand.grid(
-      codigo_comuna = unique(codigo_comuna),
-      codigo_semana = min(inicio):max(termino),
+      codigo_comuna = unique(comunas$codigo_comuna),
+      codigo_semana = 1:max(cuarentenas$termino),
       KEEP.OUT.ATTRS = FALSE
     ) %>%
     dplyr::as_tibble()
   
   cuarentenas %<>%
-    dplyr::inner_join(comunas) %>%
+    dplyr::right_join(comunas) %>%
     dplyr::arrange(codigo_comuna, codigo_semana) %>%
     dplyr::mutate(
       cuarentena = codigo_semana >= inicio & codigo_semana <= termino
     ) %>%
+    tidyr::replace_na(list(cuarentena = FALSE)) %>%
     dplyr::group_by(codigo_comuna, codigo_semana) %>%
     dplyr::summarise(cuarentena = max(cuarentena), .groups = NULL)
 }
 
 get_pvc <- function(poblacion, vecinos, cuarentenas, pasos) {
+  comunas <-
+    expand.grid(
+      codigo_comuna = unique(pasos$codigo_comuna),
+      codigo_semana = 1:max(pasos$codigo_semana),
+      KEEP.OUT.ATTRS = FALSE
+    ) %>%
+    dplyr::as_tibble()
+  
   pvc <- 
     list(cuarentenas, pasos, poblacion, vecinos) %>%
     purrr::reduce(dplyr::full_join) %>%
@@ -251,6 +253,8 @@ get_pvc <- function(poblacion, vecinos, cuarentenas, pasos) {
     dplyr::group_by(codigo_semana, codigo_vecino) %>%
     dplyr::summarise(pvc = sum(poblacion * (paso == 1)) / sum(poblacion)) %>%
     dplyr::rename(codigo_comuna = codigo_vecino) %>%
+    dplyr::right_join(comunas) %>%
+    tidyr::replace_na(list(pvc = 0.0)) %>%
     dplyr::arrange(codigo_comuna, codigo_semana)
 }
 
@@ -359,9 +363,11 @@ get_df <- function(df_r, ...) {
   df <- 
     list(df_r, ...) %>%
     purrr::reduce(dplyr::left_join) %>%
+    dplyr::ungroup() %>%
+    dplyr::filter(codigo_comuna != 12202) %>%
     tidyr::replace_na(list(
       pcr        = 0,
-      vacunados1 = 0, 
+      vacunados1 = 0,
       vacunados2 = 0,
       cuarentena = FALSE
     )) %>%
@@ -402,8 +408,7 @@ get_df <- function(df_r, ...) {
       idse,
       indice_ruralidad,
       dplyr::contains("lag")
-    ) %>%
-    na.omit()
+    )
 }
 
 get_fit <- function(df) {
@@ -430,7 +435,7 @@ get_fit <- function(df) {
     preserve = "",
     random   = "(1 | codigo_region / codigo_comuna)",
     max_pval = 0.1,
-    data     = df
+    data     = na.omit(df)
   )
 }
 
@@ -442,7 +447,7 @@ get_b <- function(fit) {
   broom.mixed::tidy(fit, effects = "fixed")
 }
 
-get_plot_rmed <- function(r) {
+get_plot_r_p50 <- function(r) {
   df <-
     r %>%
     dplyr::group_by(codigo_comuna, method) %>%
@@ -465,3 +470,55 @@ get_plot_rmed <- function(r) {
     ggplot2::scale_color_grey() +
     ggplot2::labs(fill = "R efectivo")
 }
+
+get_plot_r_p10 <- function(r) {
+  df <-
+    r %>%
+    dplyr::group_by(codigo_comuna, method) %>%
+    dplyr::summarise(r = quantile(r, 0.10, na.rm = TRUE), .groups = NULL)
+  
+  mapa <-
+    sf::st_read("data/mapa/mapa.shp", quiet = TRUE) %>%
+    dplyr::filter(
+      !(NOM_PROVIN %in% c("ANTÁRTICA CHILENA", "ISLA DE PASCUA")),
+      !(NOM_COMUNA %in% c("JUAN FERNANDEZ"))
+    ) %>%
+    sf::st_transform('+proj=longlat +datum=WGS84') %>%
+    dplyr::mutate(codigo_comuna = CUT) %>%
+    dplyr::inner_join(df)
+  
+  ggplot2::ggplot(data = mapa) +
+    ggplot2::geom_sf(ggplot2::aes(fill = r), size = 0.1) +
+    ggplot2::facet_grid(cols = ggplot2::vars(method)) +
+    ggplot2::theme_void() +
+    ggplot2::scale_color_grey() +
+    ggplot2::labs(fill = "R efectivo")
+}
+
+get_plot_r_p90 <- function(r) {
+  df <-
+    r %>%
+    dplyr::group_by(codigo_comuna, method) %>%
+    dplyr::summarise(r = quantile(r, 0.90, na.rm = TRUE), .groups = NULL)
+  
+  mapa <-
+    sf::st_read("data/mapa/mapa.shp", quiet = TRUE) %>%
+    dplyr::filter(
+      !(NOM_PROVIN %in% c("ANTÁRTICA CHILENA", "ISLA DE PASCUA")),
+      !(NOM_COMUNA %in% c("JUAN FERNANDEZ"))
+    ) %>%
+    sf::st_transform('+proj=longlat +datum=WGS84') %>%
+    dplyr::mutate(codigo_comuna = CUT) %>%
+    dplyr::inner_join(df)
+  
+  ggplot2::ggplot(data = mapa) +
+    ggplot2::geom_sf(ggplot2::aes(fill = r), size = 0.1) +
+    ggplot2::facet_grid(cols = ggplot2::vars(method)) +
+    ggplot2::theme_void() +
+    ggplot2::scale_color_grey() +
+    ggplot2::labs(fill = "R efectivo")
+}
+
+# TODO:
+# Crear dos BBDD de casos, con y sin max(1, .)
+# Revisar qué pasa con la comuna 12202 en "maestra de comunas"
