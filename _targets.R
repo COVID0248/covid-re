@@ -26,7 +26,9 @@ list(
   tar_target(cuarentenas, get_cuarentenas(comunas)),
   tar_target(vacaciones, get_vacaciones()),
   tar_target(pvc, get_pvc(poblacion, vecinos, cuarentenas, pasos)), # debiese cubrir todas las semanas (añadir ceros está bien)
-  tar_target(r_systrom, get_r_systrom(casos)),
+  tar_target(r_systrom_stanfile, "stan/systrom.stan", format = "file"),
+  tar_target(r_systrom_model, get_r_systrom_model(r_systrom_stanfile)),
+  tar_target(r_systrom, get_r_systrom(casos, r_systrom_model)),
   tar_target(r_cislaghi, get_r_cislaghi(casos)),
   tar_target(r_jrc, get_r_jrc(casos)),
   tar_target(r_rki, get_r_rki(casos)),
@@ -59,3 +61,6 @@ list(
   targets::tar_target(plot_r_p50, get_plot_r_p50(r)),
   targets::tar_target(plot_r_p90, get_plot_r_p90(r))
 )
+
+# TODO:
+# Añadir un gráfico con las series de tiempo de unas 3 comunas "interesantes".

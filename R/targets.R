@@ -267,31 +267,34 @@ get_vacaciones <- function() {
   )
 }
 
-get_r_systrom <- function(data) {
-  Nareas <- dplyr::n_distinct(data$codigo_comuna)
-  Ntimes <- dplyr::n_distinct(data$codigo_semana)
-  stan_data <-
-    list(
-      gamma  = 1,
-      Ntimes = Ntimes,
-      Nareas = Nareas,
-      I      = array(data$casos_nuevos, c(Ntimes, Nareas))
-    )
-  stan_model <- rstan::stan_model("stan/systrom.stan")
-  stan_fit <- rstan::sampling(
-    object = stan_model, 
-    data   = stan_data, 
-    seed   = 1L
-  )
-  
-  re_systrom <-
-    data %>%
-    dplyr::arrange(codigo_semana, codigo_comuna) %>%
-    dplyr::mutate(
-      r = rstan::get_posterior_mean(stan_fit, "R")[, 5],
-      method = "systrom"
+get_r_systrom_model <- function(r_systrom_stanfile) {
+  rstan::stan_model(r_systrom_stanfile)
+}
+
+get_r_systrom <- function(data, r_systrom_model) {
+  data     <- dplyr::arrange(data, codigo_comuna, codigo_semana)
+  semanas  <- unique(data$codigo_semana)
+  comunas  <- unique(data$codigo_comuna)
+  Nsemanas <- length(semanas)
+  comunas %>%
+    purrr::map(
+      ~ list(
+        gamma  = 1,
+        sigma  = 0.1,
+        Ntimes = Nsemanas,
+        I      = data$casos_nuevos[data$codigo_comuna == .x]
+      ) %>%
+        rstan::sampling(r_systrom_model, data = ., seed = 1L, iter = 4000) %>%
+        {tidyr::tibble(
+          method        = "systrom",
+          codigo_comuna = .x,
+          codigo_semana = semanas,
+          r             = rstan::get_posterior_mean(., "R")[, 5]
+        )}
     ) %>%
-    tibble::as_tibble()
+    purrr::reduce(rbind) %>%
+    dplyr::arrange(codigo_comuna, codigo_semana)
+  
 }
 
 get_r_cislaghi <- function(data) {

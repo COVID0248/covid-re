@@ -1,20 +1,18 @@
 data {
   int<lower=0> gamma;
+  real<lower=0> sigma;
   int<lower=0> Ntimes;
-  int<lower=0> Nareas;
-  int<lower=0> I[Ntimes, Nareas];
+  int<lower=0> I[Ntimes];
 }
 
 parameters {
-  real<lower=0> sigma;
-  real R[Ntimes, Nareas];
+  real R[Ntimes];
 }
 
 model {
-  for (j in 2:Ntimes) {
-    for (i in 1:Nareas) {
-      I[j, i] ~ poisson_log(log(I[j - 1, i]) + gamma * (R[j, i] - 1));
-      R[j, i] ~ normal(R[j, i], sigma);
-    }
+  R[1] ~ normal(1.0, sigma);
+  for (t in 2:Ntimes) {
+    I[t] ~ poisson_log(log(I[t - 1]) + gamma * (R[t] - 1));
+    R[t] ~ normal(R[t - 1], sigma);
   }
 }
