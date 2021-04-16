@@ -59,7 +59,9 @@ list(
   targets::tar_target(plot_casos, long_boxplot(casos, "casos_nuevos")),
   targets::tar_target(plot_r_p10, get_plot_r_p10(r)),
   targets::tar_target(plot_r_p50, get_plot_r_p50(r)),
-  targets::tar_target(plot_r_p90, get_plot_r_p90(r))
+  targets::tar_target(plot_r_p90, get_plot_r_p90(r)),
+  targets::tar_target(plot_r_ts, get_plot_r_ts(r)),
+  targets::tar_target(plot_r_bp, get_plot_r_bp(r))
 )
 
 # TODO:

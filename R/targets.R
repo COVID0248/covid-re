@@ -522,6 +522,32 @@ get_plot_r_p90 <- function(r) {
     ggplot2::labs(fill = "R efectivo")
 }
 
+get_plot_r_ts <- function(r, comunas) {
+  regiones <- 
+    targets::tar_read(comunas) %>%
+    dplyr::filter(capital_regional == 1) %>%
+    dplyr::select(codigo_comuna, codigo_region, comuna)
+  
+  targets::tar_read(r) %>%
+    dplyr::filter(codigo_region %in% c(5, 6, 8, 13)) %>%
+    dplyr::select(!codigo_region) %>%
+    dplyr::inner_join(regiones) %>%
+    ggplot2::ggplot(aes(y = r, x = codigo_semana)) +
+    ggplot2::facet_grid(rows = ggplot2::vars(method)) +
+    ggplot2::geom_line(aes(colour = comuna)) +
+    ggplot2::theme_classic() +
+    ggplot2::labs(x = "código semana", y = "r efectivo")  
+}
+
+get_plot_r_bp <- function(r) {
+  r %>%
+    ggplot2::ggplot(aes(y = r, group = codigo_semana)) +
+    ggplot2::geom_boxplot(outlier.size = 0.1) +
+    ggplot2::facet_grid(rows = ggplot2::vars(method)) +
+    ggplot2::theme_classic() +
+    ggplot2::labs(x = "código semana", y = "r efectivo")  
+}
+
 # TODO:
 # Crear dos BBDD de casos, con y sin max(1, .)
 # Revisar qué pasa con la comuna 12202 en "maestra de comunas"
