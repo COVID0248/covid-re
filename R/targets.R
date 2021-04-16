@@ -284,7 +284,7 @@ get_r_systrom <- function(data, r_systrom_model) {
         Ntimes = Nsemanas,
         I      = data$casos_nuevos[data$codigo_comuna == .x]
       ) %>%
-        rstan::sampling(r_systrom_model, data = ., seed = 1L, iter = 4000) %>%
+        rstan::sampling(r_systrom_model, data = ., seed = 1L, iter = 10000) %>%
         {tidyr::tibble(
           method        = "systrom",
           codigo_comuna = .x,
