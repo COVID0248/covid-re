@@ -11,7 +11,7 @@ renv::restore(prompt = FALSE)
 targets::tar_make("r")
 ```
 
-Note que la instalación del paquete `sf` solo será exitosa si Ud. cuenta con sus dependencias. Para mayo información, visite el [sitio web de la librería](https://r-spatial.github.io/sf/). Note además que la librería rstan es una librería con muchas artefactos (dependencias que no son otros paquetes de R), por lo que es difícil asegurar su instalación automática en cualquier computador (por lo menos, no sin Docker). En caso de que rstan falle, se recomienda reinstalarlo manualmente. Para mayor información, visite el [sitio web de la librería](https://mc-stan.org/users/interfaces/rstan).
+Note que la instalación del paquete `sf` solo será exitosa si Ud. cuenta con sus dependencias. Para mayor información, visite el [sitio web de la librería](https://r-spatial.github.io/sf/). Note además que la librería rstan usa muchos artefactos (i.e. tiene dependencias que no son otros paquetes de R), por lo que es difícil asegurar su instalación automática en cualquier computador (por lo menos, no sin Docker). En caso de que rstan falle, se recomienda reinstalarlo manualmente. Para mayor información, visite el [sitio web de la librería](https://mc-stan.org/users/interfaces/rstan).
 
 Una vez construido este proyecto, puede invocar cualquier target (e.g. `r`), ejecutando
 
