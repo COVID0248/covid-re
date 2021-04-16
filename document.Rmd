@@ -1,0 +1,230 @@
+---
+title: "Informe estimación del R efectivo del COVID-19 en Chile, según comuna y semana"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introducción
+
+La reciente pandemia de COVID-19 ha generado una necesidad cada vez mayor por indicadores de la velocidad de propagación de la pandemia. Entre estos, uno de los indicadores más populares es el número de reproducción efectivo o *R efectivo*, que describe a cuántas personas infecta una persona infecciosa totalmente en promedio durante su tiempo siendo infeccioso, en una población donde algunas personas pueden tener protección contra la enfermedad. En Chile, el R efectivo es periódicamente calculado por el Centro de Modelamiento Matemático (CMM) y puede ser visualizado, a nivel regional (Chile se compone de 16 regiones), a través de un conveniente dashboard^[Disponible en [https://covid-19vis.cmm.uchile.cl/geo](https://covid-19vis.cmm.uchile.cl/geo)].
+
+Por otra parte, en julio de 2020, el gobierno de Chile inició el plan *Paso a Paso*. La página oficial del gobierno describe el plan de la siguiente manera:^[Consultado en [https://www.gob.cl/coronavirus/pasoapaso/](https://www.gob.cl/coronavirus/pasoapaso/).]
+
+  *"El Plan Paso a Paso es una estrategia gradual para enfrentar la pandemia según la situación sanitaria de cada zona en particular. Se trata de 5 escenarios o pasos graduales, que van desde la Cuarentena hasta la Apertura Avanzada, con restricciones y obligaciones específicas. El avance o retroceso de un paso particular a otro está sujeta a indicadores epidemiológicos, red asistencial y trazabilidad."*
+
+La implementación de este plan requiere de información epidemiológica oportuna a un nivel comunal (cada región se compone de un número variable de comunas, habiendo 346 comunas en total). Sin embargo, la desagregación de indicadores como el R efectivo suele detenerse en el nivel regional. Esto se debe a que a mayor nivel de desagregación, mayor nivel de imprecisión en las estimaciones del R efectivo. El grado de desagregación en discusión puede entender mejor con algunas cifras: según las proyecciones del Instituto Nacional de Estadísticas (INE) de Chile para 2020, la población de Chile es de 19.458.173, la población mediana de las regiones es 763.975, y la población mediana de las comunas es de 20.071.
+
+Ciertamente, la mayor imprecisión de cualquier estimador del R efectivo a nivel comunal inhibe su uso como un producto final. Sin embargo, estos estadísticos aún pueden útiles si se utilizan como un insumo para un modelo mayor. Suponga, por ejemplo, que deseamos evaluar los beneficios del plan paso a paso usando datos con resolución comunal-semanal. En tal caso, usar el R-efectivo de cada comuna-semana como variable dependiente puede tener sentido incluso si solo se consideran como estimadores *ruidosos* del verdadero R efectivo. En virtud de lo anterior, creemos que es valioso contar con estimaciones del R-efectivo más desagregadas (en particular, a nivel semanal-comuna), siempre y cuando se utilicen cuidadosamente.
+
+El objetivo del presente artículo es presentar un panorama general del comportamiento de diversos estimadores del R efectivo, calculados al nivel comunal-semanal. En sección 2, presentamos los estimadores del R efectivo considerados. En la sección 3, mostramos en una serie de mapas los cuantiles de las estimaciones resultantes para cada comuna. Finalmente, la sección 4 concluye con un par de recomendaciones y una discusión final. 
+
+# Estimadores del R efectivo
+
+En epidemiología, existen diversos estimadores de la velocidad de propagación de una enfermedad. Entre ellos, dos estimadores muy populares son el *número de reproducción básico*, $R_0$, y el *número de reproducción efectivo* o simplemente R efectivo. El número de reproducción básico describe cuántas personas infecta una persona infecciosa en promedio durante su tiempo siendo infeccioso en una población donde se supone que nadie tiene ninguna protección contra la enfermedad. Puede calcularse como $R_0 = \tau c d$, donde $\tau$ es la probabilidad de transmisión por contacto, $c$ es la tasa de contacto (número de contactos entre individuos por unidad de tiempo) y $d$ es el largo del período infeccioso. Por otra parte, el número de reproducción efectivo describe a cuántas personas infecta una persona infecciosa totalmente en promedio durante su tiempo siendo infeccioso, en una población donde algunas personas pueden tener protección contra la enfermedad. Es importante notar que, mientras $R_0$ es constante, mientras que el R efectivo puede variar con el tiempo. En este artículos, el foco de atención recae sobre el R efectivo.
+
+En lo que sigue, resumiremos brevemente algunos estimadores populares del R efectivo. Por fines pedagógicos, comenzaremos explicando el método para estimaciones a nivel nacional-diario. Para mayor información acerca de estos estimadores, consulte \cite{jrc2020}.
+
+## Método de Systrom
+
+Sea $I_t$ el número de casos nuevos durante el $t$-ésimo día, y sea $R_t$ el $R$ efectivo asociado. Systrom \cite{systrom2020} propone inferir $R_t$ a partir de $I_t$ siguiendo un enfoque Bayesiano. Para esto, asume que
+$$
+\begin{aligned}
+    I_t | R_t, I_{t-1} \sim \text{Poi}(\lambda(R_t, I_{t-1})), \\
+    \lambda(R_t, I_{t-1}) = I_{t-1} \exp\{\gamma(R_t - 1)\}, \\
+    R_t | R_{t-1} \sim N(R_{t-1}, \sigma^2),
+\end{aligned}
+$$
+donde $\gamma$ es el recíproco del intervalo serial, i.e. el tiempo promedio entre la aparición de síntomas dentro de una cadena de infecciones, que es cerca de 7 para el covid-19; y $\sigma^2$ es un parámetro por ser estimado. En la encarnación original de la propuesta, $\sigma^2$ estimado usando ML, de modo que no estrictamente Bayesiana. Sin embargo, también es posible asignar a $\sigma^2$ un valor relativamente holgado (en nuestras simulaciones, 0.1) o alguna priori (digamos, Gamma). No obstante, en nuestras simulaciones, hemos constantado que solo se alcanzan resultados razonables si la priori es propia y relativamente informativa.
+
+## Método de Cislaghi
+
+Sea $I_t$ el número de casos nuevos durante el $t$-ésimo día, y sea $R_t$ el $R$ efectivo asociado. Cislaghi \cite{cislaghi2020} propone aproximar $R_t$ como $R_t \approx \hat{I}_t^{(p)} / \hat{I}_{t-b}^{(p)}$, donde $\hat{I}_t^{(p)} := \sum_{s = 1}^p I_{t-s} / p$, donde $p$ es un parámetro de suavizamiento y $b$ representa el período de incubación. Valores recomendados para $p$ y $b$ son $p \in [5, 7]$ y $b = 5$.
+
+## Método JRC
+
+Durante la fase inicial de la pandemia, el número de reproducción caracteriza el crecimiento exponencial en los susceptibles. El cambio en los casos nuevos es expresado por
+$$
+\begin{align*}
+    \frac{dI}{dt} = \frac{R_0}{d} \frac{S}{N} I - \frac{I}{d}
+\end{align*}
+$$
+donde $S$ es el número de personas susceptibles, $I$ es el número de personas infecciosas, $N$ es el tamaño de la población, y $d$ es el largo del período infeccioso. Asumiendo que $S \approx N$, tenemos que
+$$
+\begin{align*}
+    I = I_0 \exp\{t(R_0 / d - 1)\}.
+\end{align*}
+$$
+El método del Joint Research Centre (JRC) de la comisión europea \cite{jrc2020} se basa en el supuesto de que el $R$ efectivo no cambia demasiado durante períodos suficientemente cortos. Específicamente, sean $t_1$ y $t_2$ dos instantes de tiempo cercanos. Entonces, reemplazando $R_0$ por $R_t$ en dos puntos de tiempo cualesquiera (digamos, $t_1$ y $t_2$) y tomando logaritmos, tenemos que
+$$
+\begin{align*}
+    \log I_{t_1} = \log I_0 + (R_{t_1} / d - 1) t_1, \\
+    \log I_{t_2} = \log I_0 + (R_{t_2} / d - 1) t_2.
+\end{align*}
+$$
+Luego, si $R_{t_1} \approx R_{t_2}$, entonces
+$$
+\begin{align*}
+    R_{t_2} = d\frac{\log I_{t_2} - \log I_{t_1}}{t_2 - t_1} + 1.
+\end{align*}
+$$
+Por lo general, $d$ es fijado en 7 días.
+
+## Método del RKI
+
+Sea $I_t$ el número de casos nuevos. El método del Instituto Robert Koch (RKI) \cite{rki2020} estima $R_t$ como
+$$
+\begin{align*}
+    R_t = \frac{\sum_{s = 1}^b I_{t-s}}{\sum_{\tau = 1}^b I_{t - b - \tau}}
+\end{align*}
+$$
+donde $b$ es el período de generación (i.e., el tiempo entre eventos de infección en una pareja infectado-infectado), fijado por este instituto en 4 días para el covid-19; aunque también existen versiones que reemplazan $b$ por $7$ o incluso $14$.
+
+## Método de Wallinga y Lipsitch
+
+Antes de introducir el método de Wallinga Lipsitch \cite{walling2007}, es necesario introducir la ecuación de Euler-Lotka. La mejor forma de entender esta ecuación es en el contexto de un modelo de dinámica poblacional en tiempo contnuo. Así pues, considere un modelo de esta índole (concentrado solo en las mujeres), donde $B(t)$ representa el número de nacimientos por unidad de tiempo, $\ell(a)$ es la fracción de individuos sobreviviendo a la edad $a$, y $b(a)$ es la tasa per-cápita de partos para madres de edad $a$. Dadas estas definiciones, se tiene que
+$$
+\begin{align*}
+    B(t) = \int_0^\infty B(t-a)\ell(a)b(a)da.
+\end{align*}
+$$
+Supongamos ahora que $B(t) / B(t-a) = e^{ra}$. Entonces,
+$$
+\begin{align*}
+    B(t) = \int_0^\infty B(t)e^{-ra}\ell(a)b(a)da
+    \Rightarrow
+    1 = \int_0^\infty e^{-ra}\ell(a)b(a)da,
+\end{align*}
+$$
+que es la ecuación de Euler-Lotka. En la práctica podemos interpretar $n(a) = \ell(a)b(a)$ como la tasa de producción de hijas mujeres por parte de una mujer de edad $a$, considerando sus tasas de sobrevivencia y fecundidad.
+
+Hasta aquí, toda la discusión ha sido relativa a dinámicas poblacionales, pero si reinterpretamos los nacimientos como contagios, tenemos que, bajo este modelo, el $R$ efectivo debiese estar dado por
+$$
+\begin{align*}
+    R = \int_0^\infty n(a) da.
+\end{align*}
+$$
+La tasa $n(a)$ puede ser normalizada como una distribución. Específicamente, como
+$$
+\begin{align*}
+    f(a) := \frac{n(a)}{\int_0^\infty n(a) da} = \frac{n(a)}{R}.
+\end{align*}
+$$
+Reemplazando esta expresión en la ecuación de Euler-Lotka, tenemos que
+$$
+\begin{align*}
+    \frac{1}{R} = \int_0^\infty e^{-ra}f(a)da,
+\end{align*}
+$$
+Ahora, recordemos que la distribución del período de generación para una enfermedad infecciosa es la distribución del tiempo desde la infección de un individuo hasta la infección de un caso secundario por ese individuo. Por lo tanto, si tomamos la edad de una infección como el tiempo transcurrido desde la infección, entonces bajo la anotación anterior, la distribución del período de generación es equivalente a $f(a)$ anterior. De esta manera, concluimos que
+$$
+\begin{align*}
+    R = \frac{1}{M_T(-r)},
+\end{align*}
+$$
+donde $M_T$ es la función generadora de momentos del período de generación, $T$. 
+
+## Diferencias entre los supuestos
+
+Para hacer una comparación entre los diferentes métodos, es necesario investigar la metodología subyacente. Los diferentes supuestos se enumeran bajo la descripción de cada método. En general, los métodos pueden dividirse en dos tipos principales, basados en una suposición subyacente sobre la propagación de la epidemia o asumiendo que la epidemia se propaga con un valor constante en el tiempo de generación o el período de incubación. Los métodos que utilizan una suposición subyacente sobre la propagación de la epidemia son el método del JRC, el método de Wallinga \& Lipsitch, Systrom y el método de Wallinga \& Teunis. Los métodos que no utilizan ningún modelo epidémico subyacente y suponen que el número de casos nuevos se reproducirá con un valor constante en el tiempo de generación o de incubación son el método del instituto Robert Koch y el método de Cislaghi.
+
+# Aplicación a Chile con resolución comunal-semanal
+
+Las Figuras 1, 2 y 3 muestran los cuantiles 10, 50 y 90 del R efectivo, según comuna y método, respectivamente. En cada caso, se uso el número de casos de acuerdo al inicio de los síntomas, y cada parámetro originalmente definido en días fue redondeado a semanas. En aquellas comunas donde el número de casos fue temporalmente 0, se redondeó a 1 para evitar problemas al evaluar logaritmos. Todos los códigos necesarios para replicar este informe se encuentran en el repositorio [https://github.com/COVID0248/covid-re](https://github.com/COVID0248/covid-re). Vea el apéndice para más detalles.
+
+Como se puede apreciar, todos los métodos estiman un Re mediano razonable (entre 0.8 y 1.2), aunque el método de systrom requiere de un número de iteraciones relativamente grande (10.000 por cadena) para realmente converger.
+
+```{r plot01, echo=FALSE, fig.cap="Figura 1. Percentil 10 del R efectivo semanal, según comuna y método.", cache=TRUE}
+targets::tar_read(plot_r_p10)
+```
+
+```{r plot02, echo=FALSE, fig.cap="Figura 2. Percentil 50 del R efectivo semanal, según comuna y método.", cache=TRUE}
+targets::tar_read(plot_r_p50)
+```
+
+```{r plot03, echo=FALSE, fig.cap="Figura 3. Percentil 90 del R efectivo semanal, según comuna y método.", cache=TRUE}
+targets::tar_read(plot_r_p90)
+```
+
+Métodos como el del instituto Robert Koch y el de Cislaghi tienen un claro sesgo, para valores del $R_t$ sobre uno subestiman el $R_t$, mientras que para valores del $R_t$ por debajo de uno sobreestiman $R_t$. Adicionalmente, el método de Wallinga-Teunis está entre los métodos más rápidos en detectar cambios en el $R$ efectivo.
+
+La Figura 4 muestra la evolución del R efectivo, según método y semana epidemiológica, en cuatro capitales regionales: Santiago, Valparaíso, Concepción y Rancagua. Como se puede apreciar, el Método de Wallinga es el más estable. Por otra parte, el método JRC es tan inestable que incluso es capaz de arrojar valores negativos.
+
+```{r plot04, echo=FALSE, fig.cap="Figura 4. R efectivo, según método y semana epidemilógica, en cuatro capitales regionales", cache=TRUE}
+targets::tar_read(plot_r_ts)
+```
+
+Finalmente, la Figura 5 muestra un box plot de los R efectivos comunales, según método y semana epidemiológica. Cómo se puede apreciar, el método JRC tiene serios problemas al final de la serie, y los métodos de Cislaghi y RKI tienen una dispersión notoriamente superior a la del resto.
+
+```{r plot05, echo=FALSE, fig.cap="Figura 5. Box plot del R efectivo, según método y semana epidemilógica", cache=TRUE}
+targets::tar_read(plot_r_bp)
+```
+
+# Opinión Crítica
+
+## Método de Systrom
+
+El método resulta relativamente estable incluso para comuna pequeñas. Sin embargo, se observan ocasiones en las cuales el R efectivo es inaceptablemente impreciso, pudiendo incluso arrojar valores negativos. Esto se debe a la formulación del modelo Bayesiano no lo evita a priori.
+
+## Método de Cislaghi
+
+El método puede adaptarse a datos semanales fijando $d = 1$ como una aproximación del tiempo de incubación. Notar, sin embargo, en comunas pequeñas se pueden observar $R$ efectivos difíciles de defender (vea, por ejemplo, lo que ocurre con la comuna 10106 en la SE 58). Como referencia, los valores máximo y mínimo fueron 31 y 0.0096.
+
+## Método JRC
+
+El método puede adaptarse a datos semanales fijando $d = 1$ como una aproximación del tiempo de incubación y $\Delta t = 1$. Notar, sin embargo, en comunas pequeñas se pueden observar $R$ efectivos difíciles de defender (vea, por ejemplo, lo que ocurre con la comuna 10106 en la SE 58). Como referencia, los valores máximo y mínimo fueron 4.433987 y -3.644391.
+
+## Método del instituto Robert Koch
+
+El método es casi indistinguible del método de Cislaghi si se usan datos semanales.
+
+## Método de Wallinga y Lipsitch
+
+El método da resultados mucho menos volátiles que los competidores, aunque depende de la priori que uno fije para el tiempo de generación. Por el momento, se ha utilizado la priori recomendada en el documento consultado, ajustada para tratar con datos semanales en vez de diarios.
+
+# Conclusión
+
+Los métodos de estimación del R efectivo según comuna y semana siguen produciendo un R efectivo mediano razonable. Por supuesto, la variabilidad de estos estimadores del $R$ efectivo a nivel comuna hace imposible usarlos como un producto final. Sin embargo, por la forma en que están construidos, siguen siendo válidos como una variable respuesta en un modelo de regresión. En caso de tener que escoger uno, se recomienda utilizar el método de Wallinga y Lipsitch si se desea estabilidad o los métodos de Cislaghi, RKI o JRC si se desea interpretabilidad y se tiene el cuidado de no usar las comunas donde se inaceptablemente imprecisos, pues estos últimos indicadores tienen interpretación aún si no se aceptan como una buena medida del R efectivo. El método de Systrom tiene potencial, pero el modelo debiese adaptarse para garantizar a priori que los R efectivos sean positivos. Aún si el modelo no goza de ninguna propiedad de conjugación, el modelo sigue siendo estimable en softwares como [Stan](https://mc-stan.org/), siempre y cuando el modelo de cada comuna se estime por separado
+
+# Replicación de los Resultados
+
+Todos los códigos necesarios para replicar este informe se encuentran en el repositorio [https://github.com/COVID0248/covid-re](https://github.com/COVID0248/covid-re). Para reconstruir nuestra base de datos con los r-efectivos a nivel comunal-semanal, siga los siguientes pasos:
+
+1. Clone el repositorio:
+  
+  ```{bash, eval=FALSE}
+  git clone https://github.com/COVID0248/covid-re
+  ```
+    
+2. Abra R y fije el directorio del proyecto como su directorio de referencia.
+    
+3. Restaure el entorno virtual del proyecto:
+
+    ```{r, eval=FALSE}
+    renv::restore(prompt = FALSE)
+    ```
+
+Note que la instalación del librería `sf` solo será exitosa si Ud. cuenta con sus dependencias. Para mayo información, visite el [sitio web de la librería](https://r-spatial.github.io/sf/). Note además que la librería rstan es una librería con muchas artefactos (dependencias que no son otros paquetes de R), por lo que es difícil asegurar su instalación automática en cualquier computador (por lo menos, no sin Docker). En caso de que rstan falle, se recomienda reinstalarlo manualmente. Para mayor información, visite el [sitio web de la librería](https://mc-stan.org/users/interfaces/rstan).
+    
+4. Reconstruya la BB.DD. con los R efectivos:
+
+    ```{r, eval=FALSE}
+    targets::tar_make(r)
+    ```
+
+5. Extraiga el `tibble` del proyecto construido:
+
+    ```{r, eval=FALSE}
+    dfr <- targets::tar_read(r)
+    ```
+
+6. Si también desea reproducir los gráficos de este documento, puede proceder de la misma manera. Por ejemplo, si desea reproducir el gráfico con el percentil 10 del R-efectivo en cada comuna, ejecute lo siguiente:
+
+    ```{r, eval=FALSE}
+    targets::tar_make(plot_r_p10)
+    targets::tar_read(plot_r_p10)
+    ```
+
+Para reproducir los gráficos con los percentiles 50 y 90, solo debe reemplazar `plot_r_p10` por `plot_r_p50` o `plot_r_p90`, según corresponda.
