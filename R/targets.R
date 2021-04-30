@@ -360,6 +360,18 @@ get_r <- function(...) {
     dplyr::bind_rows() %>%
     dplyr::select(-c(n, casos_nuevos)) %>%
     dplyr::ungroup()
+  
+  regiones <-
+    r_final %>%
+    dplyr::distinct(codigo_comuna, codigo_region) %>%
+    dplyr::rename(codigo_region2 = codigo_region) %>%
+    na.omit()
+  
+  r_final <-
+    r_final %>%
+    dplyr::inner_join(regiones) %>%
+    dplyr::select(!codigo_region) %>%
+    dplyr::rename(codigo_region = codigo_region2)
 }
 
 get_df <- function(df_r, ...) {
@@ -536,16 +548,16 @@ get_plot_r_ts <- function(r, comunas) {
     ggplot2::facet_grid(rows = ggplot2::vars(method)) +
     ggplot2::geom_line(aes(colour = comuna)) +
     ggplot2::theme_classic() +
-    ggplot2::labs(x = "código semana", y = "r efectivo")  
+    ggplot2::labs(x = "epidemiological week", y = "effective R")  
 }
 
-get_plot_r_bp <- function(r) {
+get_plot_r_bp <- function(r, comunas) {
   r %>%
     ggplot2::ggplot(aes(y = r, group = codigo_semana)) +
     ggplot2::geom_boxplot(outlier.size = 0.1) +
     ggplot2::facet_grid(rows = ggplot2::vars(method)) +
     ggplot2::theme_classic() +
-    ggplot2::labs(x = "código semana", y = "r efectivo")  
+    ggplot2::labs(x = "epidemiological week", y = "effective R")  
 }
 
 # TODO:
