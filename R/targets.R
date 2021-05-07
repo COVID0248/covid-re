@@ -11,7 +11,13 @@ get_conn <- function() {
 }
 
 get_vecinos <- function() {
-  readRDS("data/vecinos.rds")
+  df1 <- readRDS("data/vecinos.rds")
+  df2 <- 
+    df1 %>%
+    dplyr::rename(codigo_comuna = codigo_vecino, codigo_vecino = codigo_comuna)
+  df <- 
+    rbind(df1, df2) %>%
+    dplyr::distinct()
 }
 
 get_pob_20_64 <- function(conn) {
@@ -79,6 +85,25 @@ get_pasos <- function() {
     dplyr::filter(codigo_comuna != 0) %>%
     dplyr::group_by(codigo_comuna, codigo_semana) %>%
     dplyr::summarise(paso = min(paso), .groups = "drop") %>%
+    dplyr::arrange(codigo_comuna, codigo_semana) %>%
+    tibble::as_tibble()
+}
+
+get_casos0 <- function() {
+  data <-
+    "https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master" %>%
+    paste0("/output/producto15/FechaInicioSintomas_std.csv") %>%
+    read.csv() %>%
+    dplyr::rename_with(~ gsub("\\.", "_", tolower(.x))) %>%
+    dplyr::filter(codigo_comuna != 0) %>%
+    dplyr::mutate(
+      sepi_week     = semana_epidemiologica %% 100,
+      sepi_year     = floor(semana_epidemiologica / 100),
+      codigo_semana = sepi_week + max(sepi_week) * (sepi_year == 2021),
+      casos_nuevos  = casos_confirmados,
+      n             = poblacion
+    ) %>%
+    dplyr::select(dplyr::contains("codigo"), n, casos_nuevos) %>%
     dplyr::arrange(codigo_comuna, codigo_semana) %>%
     tibble::as_tibble()
 }

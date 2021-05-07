@@ -16,7 +16,8 @@ list(
   tar_target(comunas, get_comunas(conn, inmigrantes, pob_20_64)),
   tar_target(poblacion, get_poblacion(comunas)),
   tar_target(pasos, get_pasos()),
-  tar_target(casos, get_casos()), # bien (pero ver si hacer otra version si redondeo)
+  tar_target(casos, get_casos()), # version censurada
+  tar_target(casos0, get_casos0()), # versión no-censurada
   tar_target(pcr, get_pcr(comunas)), # debiese cubrir todas las semanas (añadir ceros está bien)
   tar_target(vacunados1, get_vacunados1()), # debiese cubrir todas las semanas (añadir ceros está bien)
   tar_target(vacunados2, get_vacunados2()), # debiese cubrir todas las semanas (añadir ceros está bien)
