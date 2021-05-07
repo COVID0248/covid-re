@@ -29,16 +29,16 @@ stan_data <- list(
   Nedges = nrow(vecinos),
   Nareas = Nareas,
   Ntimes = Ntimes,
-  Npreds = nrow(bsMat),
+  Npreds = ncol(bsMat),
   i      = unique(casos0$codigo_comuna),
   t      = unique(casos0$codigo_semana),
   Y      = array(casos0$casos_nuevos, c(Ntimes, Nareas)),
-  X      = t(bsMat),
+  X      = bsMat,
   edge1  = vecinos$codigo_comuna,
-  edge1  = vecinos$codigo_vecino,
-  w      = w
+  edge2  = vecinos$codigo_vecino,
+  w      = c(0.5, 0.5)
 )
 
 # fit <- rstan::stan(file = 'stan/model_bym.stan', data = stan_data)
 object <- rstan::stan_model("stan/model_bym.stan")
-
+fit <- rstan::sampling(object = object, data = stan_data, iter = 20)
