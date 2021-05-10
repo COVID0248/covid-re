@@ -30,4 +30,5 @@ RUN echo "rstan::rstan_options(auto_write = TRUE)\n" >> /home/rstudio/.Rprofile
 #     -e PASSWORD=123 \
 #     -v $HOME/.gitconfig:/home/rstudio/.gitconfig \
 #     -v $HOME/.ssh:/home/rstudio/.ssh \
+#     -v $HOME/.aws:/home/rstudio/.aws \
 #     covid-re
