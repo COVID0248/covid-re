@@ -1,3 +1,4 @@
+# Retorna un conector con AWS
 get_conn <- function() {
   conn <-
     noctua::athena() %>%
@@ -10,6 +11,14 @@ get_conn <- function() {
     )
 }
 
+#' Todos los pares de comunas vecinas
+#' 
+#' @format Un tibble con 1692 filas y 2 columnas:
+#' \describe{
+#' \item{codigo_comuna}{comuna (código cut)}
+#' \item{codigo_vecino}{vecino (código cut)}
+#' }
+#' @note No incluye la antártica (12202)
 get_vecinos <- function() {
   df1 <- readRDS("data/vecinos.rds")
   df2 <- 
@@ -20,24 +29,38 @@ get_vecinos <- function() {
     dplyr::distinct()
 }
 
+#' Población entre 20 y 64, según comuna
+#' 
+#' @format Un tibble con 345 filas y 2 columnas:
+#' \describe{
+#'   \item{codigo_comuna}{comuna (código cut)}
+#'   \item{pob_20_64}
+#' }
+#' @note No incluye la antártica (12202)
 get_pob_20_64 <- function(conn) {
   conn %>%
     dplyr::tbl("poblacion_edad") %>% 
-    dplyr::select(
-      codigo_comuna, 
-      edad, 
-      n = total_poblacion_efectivamente_censada
-    ) %>%
+    dplyr::rename(n = total_poblacion_efectivamente_censada) %>%
+    dplyr::select(codigo_comuna, edad, n) %>%
     dplyr::collect() %>%
     dplyr::mutate(dplyr::across(
-      where(bit64::is.integer64), 
+      tidyselect:::where(bit64::is.integer64), 
       as.integer
     )) %>%
     dplyr::filter(edad %in% 20:64) %>%
     dplyr::group_by(codigo_comuna) %>%
-    dplyr::summarise(pob_20_a_64 = sum(n))
+    dplyr::summarise(pob_20_a_64 = sum(n)) %>%
+    dplyr::filter(codigo_comuna != 12202)
 }
 
+#' Número de inmigrantes, según comuna
+#' 
+#' @format Un tibble con 345 filas y 2 columnas:
+#' \describe{
+#'   \item{codigo_comuna}{comuna (código cut)}
+#'   \item{pob_20_64}
+#' }
+#' @note No incluye la antártica (12202)
 get_inmigrantes <- function(conn) {
   conn %>%
     dplyr::tbl("censo") %>% 
@@ -49,9 +72,48 @@ get_inmigrantes <- function(conn) {
     dplyr::select(
       codigo_comuna = comuna, 
       inmigrantes = inmigrantes
-    )
+    ) %>%
+    dplyr::filter(codigo_comuna != 12202)
 }
 
+#' Información comunal, según comuna
+#' 
+#' @format Un tibble con 345 filas y 31 columnas:
+#' \describe{
+#'   \item{codigo_comuna}{comuna (código cut)}
+#'   \item{codigo_region}
+#'   \item{region}
+#'   \item{comuna}
+#'   \item{provincia}
+#'   \item{superficie}
+#'   \item{poblacion}
+#'   \item{capital_regional}
+#'   \item{capital_provincial}
+#'   \item{aeropuerto}
+#'   \item{puerto}
+#'   \item{idse}{Índice de desarrollo socioeconómico (0-1000)}
+#'   \item{ingreso_per_capita}
+#'   \item{escolaridad}
+#'   \item{material_bueno_o_aceptable}
+#'   \item{esperanza_vida_al_nacer}
+#'   \item{tasa_avvp}
+#'   \item{defunciones}
+#'   \item{mortalidad_infantil}
+#'   \item{pobreza}
+#'   \item{alcantarillado}
+#'   \item{indice_desarrollo_humano}
+#'   \item{porcentake_rural}
+#'   \item{porcentaje_sector_primario}
+#'   \item{densidad_poblacional}
+#'   \item{porcentaje_rural_estandarizado}
+#'   \item{porcentaje_rural_estandarizado.1}
+#'   \item{porcentaje_sector_primario_estandarizado}
+#'   \item{indice_ruralidad}
+#'   \item{inmigrantes}
+#'   \item{pob_20_64}
+#' }  
+#' @note No incluye la antártica (12202)
+#' @note Hay 21 comunas (todas pequeñas) con NA en varias variables
 get_comunas <- function(conn, inmigrantes, pob_20_64) {
   conn %>%
     dplyr::tbl("maestra_comunas") %>% 
@@ -66,13 +128,35 @@ get_comunas <- function(conn, inmigrantes, pob_20_64) {
     ) %>%
     dplyr::inner_join(inmigrantes) %>%
     dplyr::inner_join(pob_20_64) %>%
-    dplyr::filter(!is.na(codigo_region))
+    dplyr::filter(!is.na(codigo_region)) %>%
+    dplyr::filter(codigo_comuna != 12202)
 }
 
+#' Población, según comuna
+#' 
+#' @format Un tibble con 345 filas y 2 columnas:
+#' \describe{
+#' \item{codigo_comuna}{comuna (código cut)}
+#' \item{poblacion}
+#' }
+#' @note No incluye la antártica (12202)
 get_poblacion <- function(comunas) {
-  dplyr::select(comunas, codigo_comuna, poblacion)
+  poblacion <-
+    dplyr::select(comunas, codigo_comuna, poblacion) %>%
+    dplyr::filter(codigo_comuna != 12202)
 }
 
+#' Fase en plan paso a paso, según comuna y semana epidemiológica
+#' 
+#' @format Un tibble con 14,490 filas y 3 columnas
+#' \describe{
+#' \item{codigo_comuna}{comuna (código cut)}
+#' \item{codigo_semana}{semana (epidemiologica)}
+#' \item{paso}{fase en plan paso a paso (la peor durante la semana)}
+#' }
+#' @note No incluye la antártica (12202)
+#' @note Cubre las semanas epidemiológicas 31-72
+#' @source https://github.com/MinCiencia/Datos-COVID19 - Producto 74
 get_pasos <- function() {
   data <-
     "https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master" %>%
@@ -86,9 +170,23 @@ get_pasos <- function() {
     dplyr::group_by(codigo_comuna, codigo_semana) %>%
     dplyr::summarise(paso = min(paso), .groups = "drop") %>%
     dplyr::arrange(codigo_comuna, codigo_semana) %>%
+    dplyr::filter(codigo_comuna != 12202) %>%
     tibble::as_tibble()
 }
 
+#' Casos nuevos, según comuna y semana epidemiológica
+#' 
+#' @format Un tibble con 22,425 filas y 5 columnas
+#' \describe {
+#' \item{codigo_region}{región (código)}
+#' \item{codigo_comuna}{comuna (código cut)}
+#' \item{codigo_semana}{semana (epidemiologica)}
+#' \item{n}{población comunal}
+#' \item{casos_nuevos}{casos nuevos (según semana de inicio de síntomas)}
+#' }
+#' @note No incluye la antártica (12202)
+#' @note Cubre las semanas epidemiológicas 7-71
+#' @source https://github.com/MinCiencia/Datos-COVID19 - Producto 15
 get_casos0 <- function() {
   data <-
     "https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master" %>%
@@ -105,9 +203,23 @@ get_casos0 <- function() {
     ) %>%
     dplyr::select(dplyr::contains("codigo"), n, casos_nuevos) %>%
     dplyr::arrange(codigo_comuna, codigo_semana) %>%
+    dplyr::filter(codigo_comuna != 12202) %>%
     tibble::as_tibble()
 }
 
+#' max{1, casos nuevos}, según comuna y semana epidemiológica
+#' 
+#' @format Un tibble con 22,425 filas y 5 columnas
+#' \describe {
+#' \item{codigo_region}{región (código)}
+#' \item{codigo_comuna}{comuna (código cut)}
+#' \item{codigo_semana}{semana (epidemiologica)}
+#' \item{n}{población comunal}
+#' \item{casos_nuevos}{max{1, casos nuevos} (según semana de inicio de síntomas)}
+#' }
+#' @note No incluye la antártica (12202)
+#' @note Cubre las semanas epidemiológicas 7-71
+#' @source https://github.com/MinCiencia/Datos-COVID19 - Producto 15
 get_casos <- function() {
   data <-
     "https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master" %>%
@@ -124,9 +236,20 @@ get_casos <- function() {
     ) %>%
     dplyr::select(dplyr::contains("codigo"), n, casos_nuevos) %>%
     dplyr::arrange(codigo_comuna, codigo_semana) %>%
+    dplyr::filter(codigo_comuna != 12202) %>%
     tibble::as_tibble()
 }
 
+#' (n. exámenes pcr / población comunal), según región y semana epidemiológica
+#' 
+#' @format Un tibble con 928 filas y 3 columnas
+#' \describe {
+#' \item{codigo_region}{región (código)}
+#' \item{codigo_semana}{semana (epidemiologica)}
+#' \item{pcr}{número de exámenes pcr, como fracción de la población comunal}
+#' }
+#' @note Cubre las semanas epidemiológicas 15-72
+#' @source https://github.com/MinCiencia/Datos-COVID19 - Producto 7
 get_pcr <- function(comunas) {
   pob_region <-
     comunas %>%
@@ -150,6 +273,17 @@ get_pcr <- function(comunas) {
     tibble::as_tibble()
 }
 
+#' Personas con 1ra vacuna, según comuna y semana epidemiológica
+#' 
+#' @format Un tibble con 7,245 filas y 3 columnas
+#' \describe {
+#' \item{codigo_comuna}{comuna (código cut)}
+#' \item{codigo_semana}{semana (epidemiologica)}
+#' \item{vacunados1}{personas con 1ra vacuna (acumulado)}
+#' }
+#' @note No incluye la antártica (12202)
+#' @note Cubre las semanas epidemiológicas 52-72
+#' @source https://github.com/MinCiencia/Datos-COVID19 - Producto 80
 get_vacunados1 <- function() {
   data <-
     "https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/" %>%
@@ -162,9 +296,21 @@ get_vacunados1 <- function() {
     dplyr::group_by(codigo_comuna, codigo_semana) %>%
     dplyr::summarise(vacunados1 = sum(Primera.Dosis)) %>%
     dplyr::mutate(vacunados1 = cumsum(vacunados1)) %>%
+    dplyr::filter(codigo_comuna != 12202) %>%
     dplyr::as_tibble()
 }
 
+#' Personas con 2da vacuna, según comuna y semana epidemiológica
+#' 
+#' @format Un tibble con 7,245 filas y 3 columnas
+#' \describe {
+#' \item{codigo_comuna}{comuna (código cut)}
+#' \item{codigo_semana}{semana (epidemiologica)}
+#' \item{vacunados2}{personas con 2da vacuna (acumulado)}
+#' }
+#' @note No incluye la antártica (12202)
+#' @note Cubre las semanas epidemiológicas 52-72
+#' @source https://github.com/MinCiencia/Datos-COVID19 - Producto 80
 get_vacunados2 <- function() {
   data <-
     "https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/" %>%
@@ -177,9 +323,21 @@ get_vacunados2 <- function() {
     dplyr::group_by(codigo_comuna, codigo_semana) %>%
     dplyr::summarise(vacunados2 = sum(Segunda.Dosis)) %>%
     dplyr::mutate(vacunados2 = cumsum(vacunados2)) %>%
+    dplyr::filter(codigo_comuna != 12202) %>%
     dplyr::as_tibble()
 }
 
+#' Índice de movilidad interno, según comuna y semana epidemiológica
+#' 
+#' @format Un tibble con 14,104 filas y 3 columnas
+#' \describe {
+#' \item{codigo_comuna}{comuna (código cut)}
+#' \item{codigo_semana}{semana (epidemiologica)}
+#' \item{im_interno}{índice de movilidad interno}
+#' }
+#' @note No incluye la antártica (12202) ni O'Higgins (11302)
+#' @note Cubre las semanas epidemiológicas 9-49
+#' @source https://github.com/MinCiencia/Datos-COVID19 - Producto 33
 get_im_interno <- function() {
   im_interno <-
     "https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/" %>%
@@ -192,9 +350,21 @@ get_im_interno <- function() {
     ) %>%
     dplyr::group_by(codigo_comuna, codigo_semana) %>%
     dplyr::summarise(im_interno = mean(value), .groups = NULL) %>%
-    dplyr::arrange(codigo_comuna, codigo_semana)
+    dplyr::arrange(codigo_comuna, codigo_semana) %>%
+    dplyr::filter(!codigo_comuna %in% c(11302, 12202))
 }
 
+#' Índice de movilidad externo, según comuna y semana epidemiológica
+#' 
+#' @format Un tibble con 14,104 filas y 3 columnas
+#' \describe {
+#' \item{codigo_comuna}{comuna (código cut)}
+#' \item{codigo_semana}{semana (epidemiologica)}
+#' \item{im_externo}{índice de movilidad externo}
+#' }
+#' @note No incluye la antártica (12202) ni O'Higgins (11302)
+#' @note Cubre las semanas epidemiológicas 9-49
+#' @source https://github.com/MinCiencia/Datos-COVID19 - Producto 33
 get_im_externo <- function() {
   im_externo <-
     "https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/" %>%
@@ -208,27 +378,57 @@ get_im_externo <- function() {
     dplyr::group_by(codigo_comuna, codigo_semana) %>%
     dplyr::summarise(im_externo = mean(value), .groups = NULL) %>%
     dplyr::arrange(codigo_comuna, codigo_semana) %>%
-    na.omit()
+    dplyr::filter(!codigo_comuna %in% c(11302, 12202))
 }
 
+#' MP10, según comuna y semana epidemiológica
+#' 
+#' @format Un tibble con 1,352 filas y 3 columnas
+#' \describe {
+#' \item{codigo_comuna}{comuna (código cut)}
+#' \item{codigo_semana}{semana (epidemiologica)}
+#' \item{mp10}{MP10 (microgramos por metro cúbico normalizado)}
+#' }
+#' @note No incluye la antártica (12202)
+#' @note Hay comunas y regiones llenas de NAs
+#' @note Cubre las semanas epidemiológicas 2-53
+#' @source https://github.com/MinCiencia/Datos-COVID19 - Producto 43
 get_mp10 <- function() {
-  data0 <-
+  data2020 <-
     "https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/" %>%
     paste0("/output/producto43/MP10-2020_std.csv") %>%
-    read.csv() #%>%
-  
-  comunas <-
-    data0 %>%
-    dplyr::filter(Nombre.de.estacion == "Codigo region") %>%
-    dplyr::select(-Nombre.de.estacion) %>%
-    tidyr::pivot_longer(
-      dplyr::everything(), 
-      names_to = "comuna", 
-      values_to = "codigo_region"
-    )
+    read.csv()
+  row.names(data2020) <- data2020$Nombre.de.estacion
+  mp10_2020 <- 
+    data2020 %>%
+    dplyr::select(!Nombre.de.estacion) %>%
+    t() %>%
+    dplyr::as_tibble() %>%
+    dplyr::rename(codigo_comuna = `Codigo comuna`) %>%
+    dplyr::select(!c(Region, `Codigo region`, Comuna, UTM_Este, UTM_Norte)) %>%
+    tidyr::pivot_longer(-codigo_comuna, names_to = "t", values_to = "mp10") %>%
+    dplyr::mutate(
+      codigo_comuna = as.integer(codigo_comuna),
+      codigo_semana = date_to_sepi(t),
+      mp10 = as.numeric(mp10)
+    ) %>%
+    dplyr::group_by(codigo_comuna, codigo_semana) %>%
+    dplyr::summarise(mp10 = mean(mp10, na.rm = TRUE), .groups = "drop") %>%
+    dplyr::filter(!codigo_comuna %in% c(12202))
 }
 
-get_cuarentenas <- function(comunas) {
+#' Status de cuarentena, según comuna y semana epidemiológica
+#' 
+#' @format Un tibble con 24,840 filas y 3 columnas
+#' \describe {
+#' \item{codigo_comuna}{comuna (código cut)}
+#' \item{codigo_semana}{semana (epidemiologica)}
+#' \item{cuarentena}{= 1 si se ha estado en cuarentena durante la semana}
+#' }
+#' @note No incluye la antártica (12202)
+#' @note Cubre las semanas epidemiológicas 1-72
+#' @source https://github.com/MinCiencia/Datos-COVID19 - Producto 29
+get_cuarentenas <- function(comunas, pasos) {
   cuarentenas <-
     "https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/" %>%
     paste0("/output/producto29/Cuarentenas-Totales.csv") %>%
@@ -257,32 +457,67 @@ get_cuarentenas <- function(comunas) {
     tidyr::replace_na(list(cuarentena = FALSE)) %>%
     dplyr::group_by(codigo_comuna, codigo_semana) %>%
     dplyr::summarise(cuarentena = max(cuarentena), .groups = NULL)
+  
+  cuarentenas %<>%
+    dplyr::full_join(pasos) %>%
+    dplyr::mutate(
+      cuarentena = dplyr::if_else(
+        is.na(cuarentena), 
+        as.integer(paso == 1), 
+        cuarentena
+      )
+    ) %>%
+    dplyr::select(!paso) %>%
+    dplyr::filter(!codigo_comuna %in% c(12202))
 }
 
-get_pvc <- function(poblacion, vecinos, cuarentenas, pasos) {
+
+#' Fracción de la población vecina en cuarentena, 
+#' según comuna y semana epidemiológica
+#' 
+#' @format Un tibble con 24,840 filas y 3 columnas
+#' \describe {
+#' \item{codigo_comuna}{comuna (código cut)}
+#' \item{codigo_semana}{semana (epidemiologica)}
+#' \item{pp_vecinos_cuarentena}{Fracción de la población vecina en cuarentena}
+#' }
+#' @note No incluye la antártica (12202)
+#' @note pp_vecinos_cuarentena == 0 para islas
+#' @note Cubre las semanas epidemiológicas 1-72
+#' @source Elaboración propia (ver R/targets.R)
+get_pp_vecinos_cuarentena <- function(poblacion, vecinos, cuarentenas) {
   comunas <-
     expand.grid(
-      codigo_comuna = unique(pasos$codigo_comuna),
-      codigo_semana = 1:max(pasos$codigo_semana),
+      codigo_comuna = unique(cuarentenas$codigo_comuna),
+      codigo_semana = 1:max(cuarentenas$codigo_semana),
       KEEP.OUT.ATTRS = FALSE
     ) %>%
     dplyr::as_tibble()
   
-  pvc <- 
-    list(cuarentenas, pasos, poblacion, vecinos) %>%
+  pp_vecinos_cuarentena <- 
+    list(cuarentenas, poblacion, vecinos) %>%
     purrr::reduce(dplyr::full_join) %>%
-    dplyr::mutate(
-      paso = dplyr::if_else(is.na(paso), 4L - 3L * cuarentena, paso)
-    ) %>%
     dplyr::arrange(codigo_semana, codigo_vecino) %>%
     dplyr::group_by(codigo_semana, codigo_vecino) %>%
-    dplyr::summarise(pvc = sum(poblacion * (paso == 1)) / sum(poblacion)) %>%
+    dplyr::summarise(
+      pp_vecinos_cuarentena = sum(poblacion * cuarentena) / sum(poblacion)
+    ) %>%
     dplyr::rename(codigo_comuna = codigo_vecino) %>%
     dplyr::right_join(comunas) %>%
-    tidyr::replace_na(list(pvc = 0.0)) %>%
-    dplyr::arrange(codigo_comuna, codigo_semana)
+    tidyr::replace_na(list(pp_vecinos_cuarentena = 0.0)) %>%
+    dplyr::arrange(codigo_comuna, codigo_semana) %>%
+    dplyr::filter(!codigo_comuna %in% c(12202))
 }
 
+#' Status de período de vacaciones, según semana epidemiológica
+#' 
+#' @format Un tibble con 72 filas y 2 columnas
+#' \describe {
+#' \item{codigo_semana}{semana (epidemiologica)}
+#' \item{vacaciones}{=1 si la semana toca al intervalo (2021-01-01, 2021-02-28)}
+#' }
+#' @note Cubre las semanas epidemiológicas 1-72
+#' @source Elaboración propia (ver R/targets.R)
 get_vacaciones <- function() {
   inicio  <- date_to_sepi(as.Date("2021-01-01"))
   termino <- date_to_sepi(as.Date("2021-02-28"))
@@ -399,17 +634,36 @@ get_r <- function(...) {
     dplyr::rename(codigo_region = codigo_region2)
 }
 
-get_df <- function(df_r, ...) {
+#' Covariables a utilizar en nuestro modelo para el R efectivo
+#' 
+#' @format Un tibble con 22,425 filas y 85 variables
+#' \describe {
+#' \item{codigo_comuna}{comuna (código cut)}
+#' \item{codigo_semana}{semana (epidemiologica)}
+#' \item{casos_nuevos}{casos nuevos (según semana de inicio de síntomas)}
+#' \item{pasos}{fase en plan paso a paso}
+#' \item{pcr}{n. de test pcr / tamaño poblacional}
+#' \item{vacunados1}{n. personas con la 1ra vacuna}
+#' \item{vacunados2}{n. personas con la 2da vacuna}
+#' \item{vacaciones}{=1 si la semana toca al intervalo (2021-01-01, 2021-02-28)}
+#' \item{cuarentena}{=1 si se ha estado en cuarentena durante la semana}
+#' \item{im_interno}{índice de movilidad interno}
+#' \item{im_externo}{índice de movilidad externo}
+#' \item{pp_vecinos_cuarentena}{Fracción de la población vecina en cuarentena}
+#' \item{todas las variables en el tibble comunas}
+#' }
+#' @note Cubre las semanas epidemiológicas 7-71
+#' @source Elaboración propia (ver R/targets.R)
+get_covariates <- function(casos, ...) {
   df <- 
-    list(df_r, ...) %>%
+    list(casos, ...) %>%
     purrr::reduce(dplyr::left_join) %>%
     dplyr::ungroup() %>%
     dplyr::filter(codigo_comuna != 12202) %>%
     tidyr::replace_na(list(
       pcr        = 0,
       vacunados1 = 0,
-      vacunados2 = 0,
-      cuarentena = FALSE
+      vacunados2 = 0
     )) %>%
     dplyr::mutate(
       paso = dplyr::if_else(is.na(paso), 4L - 3L * cuarentena, paso),
@@ -427,164 +681,164 @@ get_df <- function(df_r, ...) {
       !!!lags(vacunados1, 5),
       !!!lags(vacunados2, 5),
       !!!lags(paso, 5),
-      !!!lags(pvc, 5),
       !!!lags(pcr, 5),
       !!!lags(im_interno, 8),
-      !!!lags(im_externo, 8)
+      !!!lags(im_externo, 8),
+      !!!lags(pp_vecinos_cuarentena, 5)
     ) %>%
-    dplyr::ungroup() %>%
-    dplyr::select(
-      r,
-      casos_nuevos,
-      codigo_semana,
-      codigo_comuna,
-      codigo_region,
-      capital_regional,
-      capital_provincial,
-      pob_20_a_64,
-      inmigrantes,
-      aeropuerto,
-      puerto,
-      idse,
-      indice_ruralidad,
-      dplyr::contains("lag")
-    )
+    dplyr::ungroup() #%>%
+    # dplyr::select(
+    #   casos_nuevos,
+    #   codigo_semana,
+    #   codigo_comuna,
+    #   codigo_region,
+    #   capital_regional,
+    #   capital_provincial,
+    #   pob_20_a_64,
+    #   inmigrantes,
+    #   aeropuerto,
+    #   puerto,
+    #   idse,
+    #   indice_ruralidad,
+    #   dplyr::contains("lag")
+    # )
 }
 
-get_fit <- function(df) {
-  covariates <- c(
-    "capital_regional",
-    "capital_provincial",
-    "pob_20_a_64",
-    "inmigrantes",
-    "aeropuerto",
-    "puerto",
-    "idse",
-    "indice_ruralidad",
-    paste0("paso_lag", 1:5),
-    paste0("vacunados1_lag", 1:5),
-    paste0("vacunados2_lag", 1:5),
-    paste0("pvc_lag", 1:5),
-    paste0("pcr_lag", 1:5),
-    paste0("im_interno_lag", 6:8),
-    paste0("im_externo_lag", 6:8)
-  )
-  mystepwise(
-    yvar0    = "r",
-    xvar0    = covariates,
-    preserve = "",
-    random   = "(1 | codigo_region / codigo_comuna)",
-    max_pval = 0.1,
-    data     = na.omit(df)
-  )
-}
-
-get_cov <- function(fit) {
-  nlme::VarCorr(fit)
-}
-
-get_b <- function(fit) {
-  broom.mixed::tidy(fit, effects = "fixed")
-}
-
-get_plot_r_p50 <- function(r) {
-  df <-
-    r %>%
-    dplyr::group_by(codigo_comuna, method) %>%
-    dplyr::summarise(r = quantile(r, 0.5, na.rm = TRUE), .groups = NULL)
-
-  mapa <-
-    sf::st_read("data/mapa/mapa.shp", quiet = TRUE) %>%
-    dplyr::filter(
-      !(NOM_PROVIN %in% c("ANTÁRTICA CHILENA", "ISLA DE PASCUA")),
-      !(NOM_COMUNA %in% c("JUAN FERNANDEZ"))
-    ) %>%
-    sf::st_transform('+proj=longlat +datum=WGS84') %>%
-    dplyr::mutate(codigo_comuna = CUT) %>%
-    dplyr::inner_join(df)
-
-  ggplot2::ggplot(data = mapa) +
-    ggplot2::geom_sf(ggplot2::aes(fill = r), size = 0.1) +
-    ggplot2::facet_grid(cols = ggplot2::vars(method)) +
-    ggplot2::theme_void() +
-    ggplot2::scale_color_grey() +
-    ggplot2::labs(fill = "R efectivo")
-}
-
-get_plot_r_p10 <- function(r) {
-  df <-
-    r %>%
-    dplyr::group_by(codigo_comuna, method) %>%
-    dplyr::summarise(r = quantile(r, 0.10, na.rm = TRUE), .groups = NULL)
-  
-  mapa <-
-    sf::st_read("data/mapa/mapa.shp", quiet = TRUE) %>%
-    dplyr::filter(
-      !(NOM_PROVIN %in% c("ANTÁRTICA CHILENA", "ISLA DE PASCUA")),
-      !(NOM_COMUNA %in% c("JUAN FERNANDEZ"))
-    ) %>%
-    sf::st_transform('+proj=longlat +datum=WGS84') %>%
-    dplyr::mutate(codigo_comuna = CUT) %>%
-    dplyr::inner_join(df)
-  
-  ggplot2::ggplot(data = mapa) +
-    ggplot2::geom_sf(ggplot2::aes(fill = r), size = 0.1) +
-    ggplot2::facet_grid(cols = ggplot2::vars(method)) +
-    ggplot2::theme_void() +
-    ggplot2::scale_color_grey() +
-    ggplot2::labs(fill = "R efectivo")
-}
-
-get_plot_r_p90 <- function(r) {
-  df <-
-    r %>%
-    dplyr::group_by(codigo_comuna, method) %>%
-    dplyr::summarise(r = quantile(r, 0.90, na.rm = TRUE), .groups = NULL)
-  
-  mapa <-
-    sf::st_read("data/mapa/mapa.shp", quiet = TRUE) %>%
-    dplyr::filter(
-      !(NOM_PROVIN %in% c("ANTÁRTICA CHILENA", "ISLA DE PASCUA")),
-      !(NOM_COMUNA %in% c("JUAN FERNANDEZ"))
-    ) %>%
-    sf::st_transform('+proj=longlat +datum=WGS84') %>%
-    dplyr::mutate(codigo_comuna = CUT) %>%
-    dplyr::inner_join(df)
-  
-  ggplot2::ggplot(data = mapa) +
-    ggplot2::geom_sf(ggplot2::aes(fill = r), size = 0.1) +
-    ggplot2::facet_grid(cols = ggplot2::vars(method)) +
-    ggplot2::theme_void() +
-    ggplot2::scale_color_grey() +
-    ggplot2::labs(fill = "R efectivo")
-}
-
-get_plot_r_ts <- function(r, comunas) {
-  regiones <- 
-    targets::tar_read(comunas) %>%
-    dplyr::filter(capital_regional == 1) %>%
-    dplyr::select(codigo_comuna, codigo_region, comuna)
-  
-  targets::tar_read(r) %>%
-    dplyr::filter(codigo_region %in% c(5, 6, 8, 13)) %>%
-    dplyr::select(!codigo_region) %>%
-    dplyr::inner_join(regiones) %>%
-    ggplot2::ggplot(aes(y = r, x = codigo_semana)) +
-    ggplot2::facet_grid(rows = ggplot2::vars(method)) +
-    ggplot2::geom_line(aes(colour = comuna)) +
-    ggplot2::theme_classic() +
-    ggplot2::labs(x = "epidemiological week", y = "effective R")  
-}
-
-get_plot_r_bp <- function(r, comunas) {
-  r %>%
-    ggplot2::ggplot(aes(y = r, group = codigo_semana)) +
-    ggplot2::geom_boxplot(outlier.size = 0.1) +
-    ggplot2::facet_grid(rows = ggplot2::vars(method)) +
-    ggplot2::theme_classic() +
-    ggplot2::labs(x = "epidemiological week", y = "effective R")  
-}
+# get_fit <- function(df) {
+#   covariates <- c(
+#     "capital_regional",
+#     "capital_provincial",
+#     "pob_20_a_64",
+#     "inmigrantes",
+#     "aeropuerto",
+#     "puerto",
+#     "idse",
+#     "indice_ruralidad",
+#     paste0("paso_lag", 1:5),
+#     paste0("vacunados1_lag", 1:5),
+#     paste0("vacunados2_lag", 1:5),
+#     paste0("pvc_lag", 1:5),
+#     paste0("pcr_lag", 1:5),
+#     paste0("im_interno_lag", 6:8),
+#     paste0("im_externo_lag", 6:8)
+#   )
+#   mystepwise(
+#     yvar0    = "r",
+#     xvar0    = covariates,
+#     preserve = "",
+#     random   = "(1 | codigo_region / codigo_comuna)",
+#     max_pval = 0.1,
+#     data     = na.omit(df)
+#   )
+# }
+# 
+# get_cov <- function(fit) {
+#   nlme::VarCorr(fit)
+# }
+# 
+# get_b <- function(fit) {
+#   broom.mixed::tidy(fit, effects = "fixed")
+# }
+# 
+# get_plot_r_p50 <- function(r) {
+#   df <-
+#     r %>%
+#     dplyr::group_by(codigo_comuna, method) %>%
+#     dplyr::summarise(r = quantile(r, 0.5, na.rm = TRUE), .groups = NULL)
+# 
+#   mapa <-
+#     sf::st_read("data/mapa/mapa.shp", quiet = TRUE) %>%
+#     dplyr::filter(
+#       !(NOM_PROVIN %in% c("ANTÁRTICA CHILENA", "ISLA DE PASCUA")),
+#       !(NOM_COMUNA %in% c("JUAN FERNANDEZ"))
+#     ) %>%
+#     sf::st_transform('+proj=longlat +datum=WGS84') %>%
+#     dplyr::mutate(codigo_comuna = CUT) %>%
+#     dplyr::inner_join(df)
+# 
+#   ggplot2::ggplot(data = mapa) +
+#     ggplot2::geom_sf(ggplot2::aes(fill = r), size = 0.1) +
+#     ggplot2::facet_grid(cols = ggplot2::vars(method)) +
+#     ggplot2::theme_void() +
+#     ggplot2::scale_color_grey() +
+#     ggplot2::labs(fill = "R efectivo")
+# }
+# 
+# get_plot_r_p10 <- function(r) {
+#   df <-
+#     r %>%
+#     dplyr::group_by(codigo_comuna, method) %>%
+#     dplyr::summarise(r = quantile(r, 0.10, na.rm = TRUE), .groups = NULL)
+#   
+#   mapa <-
+#     sf::st_read("data/mapa/mapa.shp", quiet = TRUE) %>%
+#     dplyr::filter(
+#       !(NOM_PROVIN %in% c("ANTÁRTICA CHILENA", "ISLA DE PASCUA")),
+#       !(NOM_COMUNA %in% c("JUAN FERNANDEZ"))
+#     ) %>%
+#     sf::st_transform('+proj=longlat +datum=WGS84') %>%
+#     dplyr::mutate(codigo_comuna = CUT) %>%
+#     dplyr::inner_join(df)
+#   
+#   ggplot2::ggplot(data = mapa) +
+#     ggplot2::geom_sf(ggplot2::aes(fill = r), size = 0.1) +
+#     ggplot2::facet_grid(cols = ggplot2::vars(method)) +
+#     ggplot2::theme_void() +
+#     ggplot2::scale_color_grey() +
+#     ggplot2::labs(fill = "R efectivo")
+# }
+# 
+# get_plot_r_p90 <- function(r) {
+#   df <-
+#     r %>%
+#     dplyr::group_by(codigo_comuna, method) %>%
+#     dplyr::summarise(r = quantile(r, 0.90, na.rm = TRUE), .groups = NULL)
+#   
+#   mapa <-
+#     sf::st_read("data/mapa/mapa.shp", quiet = TRUE) %>%
+#     dplyr::filter(
+#       !(NOM_PROVIN %in% c("ANTÁRTICA CHILENA", "ISLA DE PASCUA")),
+#       !(NOM_COMUNA %in% c("JUAN FERNANDEZ"))
+#     ) %>%
+#     sf::st_transform('+proj=longlat +datum=WGS84') %>%
+#     dplyr::mutate(codigo_comuna = CUT) %>%
+#     dplyr::inner_join(df)
+#   
+#   ggplot2::ggplot(data = mapa) +
+#     ggplot2::geom_sf(ggplot2::aes(fill = r), size = 0.1) +
+#     ggplot2::facet_grid(cols = ggplot2::vars(method)) +
+#     ggplot2::theme_void() +
+#     ggplot2::scale_color_grey() +
+#     ggplot2::labs(fill = "R efectivo")
+# }
+# 
+# get_plot_r_ts <- function(r, comunas) {
+#   regiones <- 
+#     targets::tar_read(comunas) %>%
+#     dplyr::filter(capital_regional == 1) %>%
+#     dplyr::select(codigo_comuna, codigo_region, comuna)
+#   
+#   targets::tar_read(r) %>%
+#     dplyr::filter(codigo_region %in% c(5, 6, 8, 13)) %>%
+#     dplyr::select(!codigo_region) %>%
+#     dplyr::inner_join(regiones) %>%
+#     ggplot2::ggplot(aes(y = r, x = codigo_semana)) +
+#     ggplot2::facet_grid(rows = ggplot2::vars(method)) +
+#     ggplot2::geom_line(aes(colour = comuna)) +
+#     ggplot2::theme_classic() +
+#     ggplot2::labs(x = "epidemiological week", y = "effective R")  
+# }
+# 
+# get_plot_r_bp <- function(r, comunas) {
+#   r %>%
+#     ggplot2::ggplot(aes(y = r, group = codigo_semana)) +
+#     ggplot2::geom_boxplot(outlier.size = 0.1) +
+#     ggplot2::facet_grid(rows = ggplot2::vars(method)) +
+#     ggplot2::theme_classic() +
+#     ggplot2::labs(x = "epidemiological week", y = "effective R")  
+# }
 
 # TODO:
 # Crear dos BBDD de casos, con y sin max(1, .)
-# Revisar qué pasa con la comuna 12202 en "maestra de comunas"
+# Revisar qué pasa con la comuna 12202 en "maestra de comunas". 
+# R: Era la antártica (mejor sacarla del análisis)
