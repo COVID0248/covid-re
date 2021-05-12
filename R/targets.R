@@ -698,139 +698,139 @@ get_covariates <- function(casos, ...) {
     # )
 }
 
-# get_fit <- function(df) {
-#   covariates <- c(
-#     "capital_regional",
-#     "capital_provincial",
-#     "pob_20_a_64",
-#     "inmigrantes",
-#     "aeropuerto",
-#     "puerto",
-#     "idse",
-#     "indice_ruralidad",
-#     paste0("paso_lag", 1:5),
-#     paste0("vacunados1_lag", 1:5),
-#     paste0("vacunados2_lag", 1:5),
-#     paste0("pvc_lag", 1:5),
-#     paste0("pcr_lag", 1:5),
-#     paste0("im_interno_lag", 6:8),
-#     paste0("im_externo_lag", 6:8)
-#   )
-#   mystepwise(
-#     yvar0    = "r",
-#     xvar0    = covariates,
-#     preserve = "",
-#     random   = "(1 | codigo_region / codigo_comuna)",
-#     max_pval = 0.1,
-#     data     = na.omit(df)
-#   )
-# }
-# 
-# get_cov <- function(fit) {
-#   nlme::VarCorr(fit)
-# }
-# 
-# get_b <- function(fit) {
-#   broom.mixed::tidy(fit, effects = "fixed")
-# }
-# 
-# get_plot_r_p50 <- function(r) {
-#   df <-
-#     r %>%
-#     dplyr::group_by(codigo_comuna, method) %>%
-#     dplyr::summarise(r = quantile(r, 0.5, na.rm = TRUE), .groups = NULL)
-# 
-#   mapa <-
-#     sf::st_read("data/mapa/mapa.shp", quiet = TRUE) %>%
-#     dplyr::filter(
-#       !(NOM_PROVIN %in% c("ANTÁRTICA CHILENA", "ISLA DE PASCUA")),
-#       !(NOM_COMUNA %in% c("JUAN FERNANDEZ"))
-#     ) %>%
-#     sf::st_transform('+proj=longlat +datum=WGS84') %>%
-#     dplyr::mutate(codigo_comuna = CUT) %>%
-#     dplyr::inner_join(df)
-# 
-#   ggplot2::ggplot(data = mapa) +
-#     ggplot2::geom_sf(ggplot2::aes(fill = r), size = 0.1) +
-#     ggplot2::facet_grid(cols = ggplot2::vars(method)) +
-#     ggplot2::theme_void() +
-#     ggplot2::scale_color_grey() +
-#     ggplot2::labs(fill = "R efectivo")
-# }
-# 
-# get_plot_r_p10 <- function(r) {
-#   df <-
-#     r %>%
-#     dplyr::group_by(codigo_comuna, method) %>%
-#     dplyr::summarise(r = quantile(r, 0.10, na.rm = TRUE), .groups = NULL)
-#   
-#   mapa <-
-#     sf::st_read("data/mapa/mapa.shp", quiet = TRUE) %>%
-#     dplyr::filter(
-#       !(NOM_PROVIN %in% c("ANTÁRTICA CHILENA", "ISLA DE PASCUA")),
-#       !(NOM_COMUNA %in% c("JUAN FERNANDEZ"))
-#     ) %>%
-#     sf::st_transform('+proj=longlat +datum=WGS84') %>%
-#     dplyr::mutate(codigo_comuna = CUT) %>%
-#     dplyr::inner_join(df)
-#   
-#   ggplot2::ggplot(data = mapa) +
-#     ggplot2::geom_sf(ggplot2::aes(fill = r), size = 0.1) +
-#     ggplot2::facet_grid(cols = ggplot2::vars(method)) +
-#     ggplot2::theme_void() +
-#     ggplot2::scale_color_grey() +
-#     ggplot2::labs(fill = "R efectivo")
-# }
-# 
-# get_plot_r_p90 <- function(r) {
-#   df <-
-#     r %>%
-#     dplyr::group_by(codigo_comuna, method) %>%
-#     dplyr::summarise(r = quantile(r, 0.90, na.rm = TRUE), .groups = NULL)
-#   
-#   mapa <-
-#     sf::st_read("data/mapa/mapa.shp", quiet = TRUE) %>%
-#     dplyr::filter(
-#       !(NOM_PROVIN %in% c("ANTÁRTICA CHILENA", "ISLA DE PASCUA")),
-#       !(NOM_COMUNA %in% c("JUAN FERNANDEZ"))
-#     ) %>%
-#     sf::st_transform('+proj=longlat +datum=WGS84') %>%
-#     dplyr::mutate(codigo_comuna = CUT) %>%
-#     dplyr::inner_join(df)
-#   
-#   ggplot2::ggplot(data = mapa) +
-#     ggplot2::geom_sf(ggplot2::aes(fill = r), size = 0.1) +
-#     ggplot2::facet_grid(cols = ggplot2::vars(method)) +
-#     ggplot2::theme_void() +
-#     ggplot2::scale_color_grey() +
-#     ggplot2::labs(fill = "R efectivo")
-# }
-# 
-# get_plot_r_ts <- function(r, comunas) {
-#   regiones <- 
-#     targets::tar_read(comunas) %>%
-#     dplyr::filter(capital_regional == 1) %>%
-#     dplyr::select(codigo_comuna, codigo_region, comuna)
-#   
-#   targets::tar_read(r) %>%
-#     dplyr::filter(codigo_region %in% c(5, 6, 8, 13)) %>%
-#     dplyr::select(!codigo_region) %>%
-#     dplyr::inner_join(regiones) %>%
-#     ggplot2::ggplot(aes(y = r, x = codigo_semana)) +
-#     ggplot2::facet_grid(rows = ggplot2::vars(method)) +
-#     ggplot2::geom_line(aes(colour = comuna)) +
-#     ggplot2::theme_classic() +
-#     ggplot2::labs(x = "epidemiological week", y = "effective R")  
-# }
-# 
-# get_plot_r_bp <- function(r, comunas) {
-#   r %>%
-#     ggplot2::ggplot(aes(y = r, group = codigo_semana)) +
-#     ggplot2::geom_boxplot(outlier.size = 0.1) +
-#     ggplot2::facet_grid(rows = ggplot2::vars(method)) +
-#     ggplot2::theme_classic() +
-#     ggplot2::labs(x = "epidemiological week", y = "effective R")  
-# }
+get_fit <- function(df) {
+  covariates <- c(
+    "capital_regional",
+    "capital_provincial",
+    "pob_20_a_64",
+    "inmigrantes",
+    "aeropuerto",
+    "puerto",
+    "idse",
+    "indice_ruralidad",
+    paste0("paso_lag", 1:5),
+    paste0("vacunados1_lag", 1:5),
+    paste0("vacunados2_lag", 1:5),
+    paste0("pvc_lag", 1:5),
+    paste0("pcr_lag", 1:5),
+    paste0("im_interno_lag", 6:8),
+    paste0("im_externo_lag", 6:8)
+  )
+  mystepwise(
+    yvar0    = "r",
+    xvar0    = covariates,
+    preserve = "",
+    random   = "(1 | codigo_region / codigo_comuna)",
+    max_pval = 0.1,
+    data     = na.omit(df)
+  )
+}
+
+get_cov <- function(fit) {
+  nlme::VarCorr(fit)
+}
+
+get_b <- function(fit) {
+  broom.mixed::tidy(fit, effects = "fixed")
+}
+
+get_plot_r_p50 <- function(r) {
+  df <-
+    r %>%
+    dplyr::group_by(codigo_comuna, method) %>%
+    dplyr::summarise(r = quantile(r, 0.5, na.rm = TRUE), .groups = NULL)
+
+  mapa <-
+    sf::st_read("data/mapa/mapa.shp", quiet = TRUE) %>%
+    dplyr::filter(
+      !(NOM_PROVIN %in% c("ANTÁRTICA CHILENA", "ISLA DE PASCUA")),
+      !(NOM_COMUNA %in% c("JUAN FERNANDEZ"))
+    ) %>%
+    sf::st_transform('+proj=longlat +datum=WGS84') %>%
+    dplyr::mutate(codigo_comuna = CUT) %>%
+    dplyr::inner_join(df)
+
+  ggplot2::ggplot(data = mapa) +
+    ggplot2::geom_sf(ggplot2::aes(fill = r), size = 0.1) +
+    ggplot2::facet_grid(cols = ggplot2::vars(method)) +
+    ggplot2::theme_void() +
+    ggplot2::scale_color_grey() +
+    ggplot2::labs(fill = "R efectivo")
+}
+
+get_plot_r_p10 <- function(r) {
+  df <-
+    r %>%
+    dplyr::group_by(codigo_comuna, method) %>%
+    dplyr::summarise(r = quantile(r, 0.10, na.rm = TRUE), .groups = NULL)
+
+  mapa <-
+    sf::st_read("data/mapa/mapa.shp", quiet = TRUE) %>%
+    dplyr::filter(
+      !(NOM_PROVIN %in% c("ANTÁRTICA CHILENA", "ISLA DE PASCUA")),
+      !(NOM_COMUNA %in% c("JUAN FERNANDEZ"))
+    ) %>%
+    sf::st_transform('+proj=longlat +datum=WGS84') %>%
+    dplyr::mutate(codigo_comuna = CUT) %>%
+    dplyr::inner_join(df)
+
+  ggplot2::ggplot(data = mapa) +
+    ggplot2::geom_sf(ggplot2::aes(fill = r), size = 0.1) +
+    ggplot2::facet_grid(cols = ggplot2::vars(method)) +
+    ggplot2::theme_void() +
+    ggplot2::scale_color_grey() +
+    ggplot2::labs(fill = "R efectivo")
+}
+
+get_plot_r_p90 <- function(r) {
+  df <-
+    r %>%
+    dplyr::group_by(codigo_comuna, method) %>%
+    dplyr::summarise(r = quantile(r, 0.90, na.rm = TRUE), .groups = NULL)
+
+  mapa <-
+    sf::st_read("data/mapa/mapa.shp", quiet = TRUE) %>%
+    dplyr::filter(
+      !(NOM_PROVIN %in% c("ANTÁRTICA CHILENA", "ISLA DE PASCUA")),
+      !(NOM_COMUNA %in% c("JUAN FERNANDEZ"))
+    ) %>%
+    sf::st_transform('+proj=longlat +datum=WGS84') %>%
+    dplyr::mutate(codigo_comuna = CUT) %>%
+    dplyr::inner_join(df)
+
+  ggplot2::ggplot(data = mapa) +
+    ggplot2::geom_sf(ggplot2::aes(fill = r), size = 0.1) +
+    ggplot2::facet_grid(cols = ggplot2::vars(method)) +
+    ggplot2::theme_void() +
+    ggplot2::scale_color_grey() +
+    ggplot2::labs(fill = "R efectivo")
+}
+
+get_plot_r_ts <- function(r, comunas) {
+  regiones <-
+    targets::tar_read(comunas) %>%
+    dplyr::filter(capital_regional == 1) %>%
+    dplyr::select(codigo_comuna, codigo_region, comuna)
+
+  targets::tar_read(r) %>%
+    dplyr::filter(codigo_region %in% c(5, 6, 8, 13)) %>%
+    dplyr::select(!codigo_region) %>%
+    dplyr::inner_join(regiones) %>%
+    ggplot2::ggplot(aes(y = r, x = codigo_semana)) +
+    ggplot2::facet_grid(rows = ggplot2::vars(method)) +
+    ggplot2::geom_line(aes(colour = comuna)) +
+    ggplot2::theme_classic() +
+    ggplot2::labs(x = "epidemiological week", y = "effective R")
+}
+
+get_plot_r_bp <- function(r, comunas) {
+  r %>%
+    ggplot2::ggplot(aes(y = r, group = codigo_semana)) +
+    ggplot2::geom_boxplot(outlier.size = 0.1) +
+    ggplot2::facet_grid(rows = ggplot2::vars(method)) +
+    ggplot2::theme_classic() +
+    ggplot2::labs(x = "epidemiological week", y = "effective R")
+}
 
 # TODO:
 # Crear dos BBDD de casos, con y sin max(1, .)
