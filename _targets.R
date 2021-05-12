@@ -51,21 +51,21 @@ list(
     im_interno,
     im_externo,
     pp_vecinos_cuarentena
-  ))#,
-  # targets::tar_target(fit, get_fit(df)),
-  # targets::tar_target(cov, get_cov(fit)),
-  # targets::tar_target(b, get_b(fit)),
-  # targets::tar_target(plot_r, long_boxplot(r_wallinga, "r")),
-  # targets::tar_target(plot_pvc, long_boxplot(pvc, "pvc")),
-  # targets::tar_target(plot_pcr, long_boxplot(pcr, "pcr")),
-  # targets::tar_target(plot_vacunados1, long_boxplot(vacunados1, "vacunados1")),
-  # targets::tar_target(plot_vacunados2, long_boxplot(vacunados2, "vacunados2")),
-  # targets::tar_target(plot_casos, long_boxplot(casos, "casos_nuevos")),
-  # targets::tar_target(plot_r_p10, get_plot_r_p10(r)),
-  # targets::tar_target(plot_r_p50, get_plot_r_p50(r)),
-  # targets::tar_target(plot_r_p90, get_plot_r_p90(r)),
-  # targets::tar_target(plot_r_ts, get_plot_r_ts(r, comunas)),
-  # targets::tar_target(plot_r_bp, get_plot_r_bp(r, comunas))
+  )),
+  targets::tar_target(fit, get_fit(df)),
+  targets::tar_target(cov, get_cov(fit)),
+  targets::tar_target(b, get_b(fit)),
+  targets::tar_target(plot_r, long_boxplot(r_wallinga, "r")),
+  targets::tar_target(plot_pvc, long_boxplot(pvc, "pvc")),
+  targets::tar_target(plot_pcr, long_boxplot(pcr, "pcr")),
+  targets::tar_target(plot_vacunados1, long_boxplot(vacunados1, "vacunados1")),
+  targets::tar_target(plot_vacunados2, long_boxplot(vacunados2, "vacunados2")),
+  targets::tar_target(plot_casos, long_boxplot(casos, "casos_nuevos")),
+  targets::tar_target(plot_r_p10, get_plot_r_p10(r)),
+  targets::tar_target(plot_r_p50, get_plot_r_p50(r)),
+  targets::tar_target(plot_r_p90, get_plot_r_p90(r)),
+  targets::tar_target(plot_r_ts, get_plot_r_ts(r, comunas)),
+  targets::tar_target(plot_r_bp, get_plot_r_bp(r, comunas))
 )
 
 # TODO:
