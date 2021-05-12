@@ -13,20 +13,14 @@ get_conn <- function() {
 
 #' Todos los pares de comunas vecinas
 #' 
-#' @format Un tibble con 1692 filas y 2 columnas:
+#' @format Un tibble con 1702 filas y 2 columnas:
 #' \describe{
 #' \item{codigo_comuna}{comuna (código cut)}
 #' \item{codigo_vecino}{vecino (código cut)}
 #' }
 #' @note No incluye la antártica (12202)
 get_vecinos <- function() {
-  df1 <- readRDS("data/vecinos.rds")
-  df2 <- 
-    df1 %>%
-    dplyr::rename(codigo_comuna = codigo_vecino, codigo_vecino = codigo_comuna)
-  df <- 
-    rbind(df1, df2) %>%
-    dplyr::distinct()
+  readRDS("data/vecinos.rds")
 }
 
 #' Población entre 20 y 64, según comuna
