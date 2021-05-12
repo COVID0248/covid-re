@@ -40,7 +40,7 @@ list(
     r_systrom, r_cislaghi, r_jrc, r_rki, r_wallinga
   )),
   targets::tar_target(covariates, get_covariates(
-    casos,
+    casos0,
     comunas,
     pasos,
     pcr,
