@@ -810,7 +810,14 @@ get_plot_r_ts <- function(r, comunas) {
   regiones <-
     targets::tar_read(comunas) %>%
     dplyr::filter(capital_regional == 1) %>%
-    dplyr::select(codigo_comuna, codigo_region, comuna)
+    dplyr::select(codigo_comuna, codigo_region, comuna) %>%
+    dplyr::mutate(
+      comuna = comuna %>%
+        dplyr::recode(
+          Concepcion = "Concepción",
+          Valparaiso = "Valparaíso"
+        )
+    )
 
   targets::tar_read(r) %>%
     dplyr::filter(codigo_region %in% c(5, 6, 8, 13)) %>%
@@ -827,7 +834,7 @@ get_plot_r_bp <- function(r, comunas) {
   r %>%
     ggplot2::ggplot(aes(y = r, group = codigo_semana)) +
     ggplot2::geom_boxplot(outlier.size = 0.1) +
-    ggplot2::facet_grid(rows = ggplot2::vars(method)) +
+    ggplot2::facet_grid(rows = ggplot2::vars(method), scales = "free_y") +
     ggplot2::theme_classic() +
     ggplot2::labs(x = "epidemiological week", y = "effective R")
 }
