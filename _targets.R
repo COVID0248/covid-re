@@ -52,7 +52,8 @@ list(
     im_externo,
     pp_vecinos_cuarentena
   )),
-  targets::tar_target(fit, get_fit(df)),
+  targets::tar_target(model_df, get_model_df(r_wallinga, covariates)),
+  targets::tar_target(fit, get_fit(model_df)),
   targets::tar_target(cov, get_cov(fit)),
   targets::tar_target(b, get_b(fit)),
   targets::tar_target(plot_r, long_boxplot(r_wallinga, "r")),

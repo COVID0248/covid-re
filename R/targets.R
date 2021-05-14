@@ -605,6 +605,7 @@ get_r_wallinga <- function(data) {
     purrr::reduce(rbind) %>%
     dplyr::inner_join(data, by = c("codigo_comuna", "codigo_semana")) %>%
     dplyr::mutate(r = unname(r)) %>%
+    dplyr::select(method, codigo_semana, codigo_comuna, r) %>%
     tibble::as_tibble()
 }
 
@@ -666,8 +667,7 @@ get_covariates <- function(casos, ...) {
       across(
         .cols = c(pob_20_a_64, inmigrantes, vacunados1, vacunados2),
         .fns  = ~ .x / poblacion
-      ),
-      dplyr::across(c(codigo_comuna, codigo_region, paso), as.factor)
+      )
     ) %>%
     dplyr::arrange(codigo_comuna, codigo_semana) %>%
     dplyr::group_by(codigo_comuna) %>%
@@ -680,22 +680,32 @@ get_covariates <- function(casos, ...) {
       !!!lags(im_externo, 8),
       !!!lags(pp_vecinos_cuarentena, 5)
     ) %>%
-    dplyr::ungroup() #%>%
-    # dplyr::select(
-    #   casos_nuevos,
-    #   codigo_semana,
-    #   codigo_comuna,
-    #   codigo_region,
-    #   capital_regional,
-    #   capital_provincial,
-    #   pob_20_a_64,
-    #   inmigrantes,
-    #   aeropuerto,
-    #   puerto,
-    #   idse,
-    #   indice_ruralidad,
-    #   dplyr::contains("lag")
-    # )
+    dplyr::ungroup()
+}
+
+get_model_df <- function(r_wallinga, covariates) {
+  model_df <- 
+    dplyr::inner_join(r_wallinga, covariates) %>%
+    dplyr::mutate(dplyr::across(
+      c(codigo_comuna, codigo_region, paso), as.factor
+    )) %>%
+    dplyr::select(!dplyr::starts_with("im_")) %>%
+    dplyr::select(
+      r,
+      casos_nuevos,
+      codigo_semana,
+      codigo_comuna,
+      codigo_region,
+      capital_regional,
+      capital_provincial,
+      pob_20_a_64,
+      inmigrantes,
+      aeropuerto,
+      puerto,
+      idse,
+      indice_ruralidad,
+      dplyr::contains("lag")
+    )
 }
 
 get_fit <- function(df) {
@@ -711,10 +721,8 @@ get_fit <- function(df) {
     paste0("paso_lag", 1:5),
     paste0("vacunados1_lag", 1:5),
     paste0("vacunados2_lag", 1:5),
-    paste0("pvc_lag", 1:5),
-    paste0("pcr_lag", 1:5),
-    paste0("im_interno_lag", 6:8),
-    paste0("im_externo_lag", 6:8)
+    paste0("pp_vecinos_cuarentena_lag", 1:5),
+    paste0("pcr_lag", 1:5)
   )
   mystepwise(
     yvar0    = "r",
@@ -751,7 +759,7 @@ get_plot_r_p50 <- function(r) {
     dplyr::inner_join(df)
 
   ggplot2::ggplot(data = mapa) +
-    ggplot2::geom_sf(ggplot2::aes(fill = r), size = 0.1) +
+    ggplot2::geom_sf(ggplot2::aes(fill = r), size = 0.025) +
     ggplot2::facet_grid(cols = ggplot2::vars(method)) +
     ggplot2::theme_void() +
     ggplot2::scale_color_grey() +
@@ -775,7 +783,7 @@ get_plot_r_p10 <- function(r) {
     dplyr::inner_join(df)
 
   ggplot2::ggplot(data = mapa) +
-    ggplot2::geom_sf(ggplot2::aes(fill = r), size = 0.1) +
+    ggplot2::geom_sf(ggplot2::aes(fill = r), size = 0.025) +
     ggplot2::facet_grid(cols = ggplot2::vars(method)) +
     ggplot2::theme_void() +
     ggplot2::scale_color_grey() +
@@ -799,7 +807,7 @@ get_plot_r_p90 <- function(r) {
     dplyr::inner_join(df)
 
   ggplot2::ggplot(data = mapa) +
-    ggplot2::geom_sf(ggplot2::aes(fill = r), size = 0.1) +
+    ggplot2::geom_sf(ggplot2::aes(fill = r), size = 0.025) +
     ggplot2::facet_grid(cols = ggplot2::vars(method)) +
     ggplot2::theme_void() +
     ggplot2::scale_color_grey() +
