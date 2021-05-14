@@ -667,7 +667,8 @@ get_covariates <- function(casos, ...) {
       across(
         .cols = c(pob_20_a_64, inmigrantes, vacunados1, vacunados2),
         .fns  = ~ .x / poblacion
-      )
+      ),
+      paso =  as.factor(paso)
     ) %>%
     dplyr::arrange(codigo_comuna, codigo_semana) %>%
     dplyr::group_by(codigo_comuna) %>%
@@ -687,7 +688,7 @@ get_model_df <- function(r_wallinga, covariates) {
   model_df <- 
     dplyr::inner_join(r_wallinga, covariates) %>%
     dplyr::mutate(dplyr::across(
-      c(codigo_comuna, codigo_region, paso), as.factor
+      c(codigo_comuna, codigo_region), as.factor
     )) %>%
     dplyr::select(!dplyr::starts_with("im_")) %>%
     dplyr::select(
@@ -708,7 +709,7 @@ get_model_df <- function(r_wallinga, covariates) {
     )
 }
 
-get_fit <- function(df) {
+get_fit <- function(model_df) {
   covariates <- c(
     "capital_regional",
     "capital_provincial",
@@ -727,10 +728,10 @@ get_fit <- function(df) {
   mystepwise(
     yvar0    = "r",
     xvar0    = covariates,
-    preserve = "",
+    preserve = paste0("paso_lag", 1:5),
     random   = "(1 | codigo_region / codigo_comuna)",
     max_pval = 0.1,
-    data     = na.omit(df)
+    data     = na.omit(model_df)
   )
 }
 
@@ -759,7 +760,7 @@ get_plot_r_p50 <- function(r) {
     dplyr::inner_join(df)
 
   ggplot2::ggplot(data = mapa) +
-    ggplot2::geom_sf(ggplot2::aes(fill = r), size = 0.025) +
+    ggplot2::geom_sf(ggplot2::aes(fill = r), size = 0.05) +
     ggplot2::facet_grid(cols = ggplot2::vars(method)) +
     ggplot2::theme_void() +
     ggplot2::scale_color_grey() +
@@ -783,7 +784,7 @@ get_plot_r_p10 <- function(r) {
     dplyr::inner_join(df)
 
   ggplot2::ggplot(data = mapa) +
-    ggplot2::geom_sf(ggplot2::aes(fill = r), size = 0.025) +
+    ggplot2::geom_sf(ggplot2::aes(fill = r), size = 0.05) +
     ggplot2::facet_grid(cols = ggplot2::vars(method)) +
     ggplot2::theme_void() +
     ggplot2::scale_color_grey() +
@@ -807,7 +808,7 @@ get_plot_r_p90 <- function(r) {
     dplyr::inner_join(df)
 
   ggplot2::ggplot(data = mapa) +
-    ggplot2::geom_sf(ggplot2::aes(fill = r), size = 0.025) +
+    ggplot2::geom_sf(ggplot2::aes(fill = r), size = 0.05) +
     ggplot2::facet_grid(cols = ggplot2::vars(method)) +
     ggplot2::theme_void() +
     ggplot2::scale_color_grey() +
@@ -832,7 +833,7 @@ get_plot_r_ts <- function(r, comunas) {
     dplyr::select(!codigo_region) %>%
     dplyr::inner_join(regiones) %>%
     ggplot2::ggplot(aes(y = r, x = codigo_semana)) +
-    ggplot2::facet_grid(rows = ggplot2::vars(method)) +
+    ggplot2::facet_grid(rows = ggplot2::vars(method), scales = "free_y") +
     ggplot2::geom_line(aes(colour = comuna)) +
     ggplot2::theme_classic() +
     ggplot2::labs(x = "epidemiological week", y = "effective R")
