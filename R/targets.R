@@ -709,7 +709,32 @@ get_model_df <- function(r_wallinga, covariates) {
     )
 }
 
-get_fit <- function(model_df) {
+get_fit_oscar <- function(model_df) {
+  covariates <- c(
+    "capital_regional",
+    "capital_provincial",
+    "pob_20_a_64",
+    "inmigrantes",
+    "aeropuerto",
+    "puerto",
+    "idse",
+    "indice_ruralidad",
+    paste0("paso_lag", 1:5),
+    paste0("vacunados1_lag", 1:5),
+    paste0("vacunados2_lag", 1:5),
+    paste0("pp_vecinos_cuarentena_lag", 1:5),
+    paste0("pcr_lag", 1:5)
+  )
+  oscar_selector(
+    data     = na.omit(model_df),
+    yvar0    = "r",
+    xvar0    = covariates,
+    random   = "(1 | codigo_region / codigo_comuna)",
+    max_lag  = 5
+  )
+}
+
+get_fit_ivan <- function(model_df) {
   covariates <- c(
     "capital_regional",
     "capital_provincial",
@@ -847,8 +872,3 @@ get_plot_r_bp <- function(r, comunas) {
     ggplot2::theme_classic() +
     ggplot2::labs(x = "epidemiological week", y = "effective R")
 }
-
-# TODO:
-# Crear dos BBDD de casos, con y sin max(1, .)
-# Revisar qué pasa con la comuna 12202 en "maestra de comunas". 
-# R: Era la antártica (mejor sacarla del análisis)
