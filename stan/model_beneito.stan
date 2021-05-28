@@ -55,3 +55,17 @@ model {
   tU ~ gamma(3.2761, 1.81); // Carlin WinBUGS priors.
   tV ~ gamma(1.0000, 1.00); // Carlin WinBUGS priors.
 }
+
+generated quantities {
+  matrix[Nareas, Ntimes] R;
+  R = exp(B * x');
+  for (i in 1:Nareas){
+    for (t in (1+Nlags):Ntimes) {
+      real weighted_sum = 0.0;
+      for (lag in 1:Nlags) {
+        weighted_sum = weighted_sum + w[lag] * R[i, t - lag];
+      }
+      R[i, t] = R[i, t] / weighted_sum;
+    }
+  }
+}
