@@ -12,46 +12,57 @@ casos0 <- targets::tar_read("casos0")
 vecinos <- targets::tar_read("vecinos") %>%
   dplyr::filter(codigo_comuna < codigo_vecino)
 
-# Standardize the comunne indices
-id_comuna <- 
+# Compute standardized indices for communes
+id_area <- 
   targets::tar_read("vecinos") %>% 
   dplyr::distinct(codigo_comuna) %>%
-  dplyr::mutate(id = 1:dplyr::n())
-vecinos <- 
+  dplyr::mutate(id_area = 1:dplyr::n())
+
+# Compute standardized indices for weeks
+id_time <-
+  targets::tar_read("casos0") %>% 
+  dplyr::distinct(codigo_semana) %>%
+  dplyr::arrange(codigo_semana) %>%
+  dplyr::mutate(id_time = 1:dplyr::n())
+
+# Add standardized ids to vecinos
+edges <- 
   targets::tar_read("vecinos") %>%
-  dplyr::inner_join(id_comuna, by = "codigo_comuna") %>%
-  dplyr::inner_join(id_comuna, by = c("codigo_vecino" = "codigo_comuna"))
+  dplyr::inner_join(id_area, by = "codigo_comuna") %>%
+  dplyr::inner_join(id_area, by = c("codigo_vecino" = "codigo_comuna"))
 
-# B-spline example
-x <- unique(casos0$codigo_semana)
+# Add standardized ids to casos0
+cases <- 
+  casos0 %>%
+  inner_join(id_area) %>%
+  inner_join(id_time) %>%
+  arrange(id_area, id_time) %>%
+  select(id_area, id_time, y = casos_nuevos, n)
+
+# Compute B-splines design matrix for cases$id_week
+x <- unique(cases$id_time)
 knots <- seq.int(min(x), max(x), by = 3)
-bsMat <- splines2::bSpline(x, knots = knots, degree = 3, intercept = TRUE)
-matplot(x, bsMat, type = "l", ylab = "y")
-abline(v = knots, lty = 2, col = "gray")
+bsMat <- splines2::bSpline(x, knots = knots, degree = 3)
 
-head(casos0)
-head(vecinos)
-
-# Infectivity rates
+# Specify the infectivity profile
 w <- c(0.5, 0.5)
 
 # Prepare the dataset
-Nareas = dplyr::n_distinct(casos0$codigo_comuna)
-Ntimes = dplyr::n_distinct(casos0$codigo_semana)
+Nareas = dplyr::n_distinct(cases$id_area)
+Ntimes = dplyr::n_distinct(cases$id_time)
 stan_data <- list(
   Nlags  = length(w),
-  Nedges = nrow(vecinos),
+  Nedges = nrow(edges),
   Nareas = Nareas,
   Ntimes = Ntimes,
   Npreds = ncol(bsMat),
-  i      = unique(casos0$codigo_comuna),
-  t      = unique(casos0$codigo_semana),
-  Y      = array(casos0$casos_nuevos, c(Ntimes, Nareas)),
-  X      = bsMat,
-  edge1  = vecinos$id.x,
-  edge2  = vecinos$id.y,
+  y      = array(cases$y, c(Ntimes, Nareas)),
+  n      = array(cases$n, c(Ntimes, Nareas)),
+  x      = bsMat,
+  edge1  = edges$id_area.x,
+  edge2  = edges$id_area.y,
   w      = w
 )
 
-object <- rstan::stan_model("stan/model_beneito.stan")
-fit <- rstan::sampling(object = object, data = stan_data, iter = 4)
+# object <- rstan::stan_model("stan/model_beneito.stan")
+# fit <- rstan::sampling(object = object, data = stan_data, iter = 4)
