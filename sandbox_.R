@@ -2,6 +2,7 @@ library(dplyr)
 library(rstan)
 library(magrittr)
 library(splines2)
+library(posterior)
 options(mc.cores = parallel::detectCores())
 rstan::rstan_options(auto_write = TRUE)
 
@@ -64,5 +65,6 @@ stan_data <- list(
   w      = w
 )
 
-object <- rstan::stan_model("stan/model_beneito.stan")
-fit <- rstan::sampling(object = object, data = stan_data, iter = 4)
+fit <- stan(file = "stan/model_beneito.stan", data = stan_data, iter = 4)
+Res <- rstan::extract(fit, "R")$R
+Re_mean <- apply(Res, c(2, 3), mean)
