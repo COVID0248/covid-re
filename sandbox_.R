@@ -57,12 +57,12 @@ stan_data <- list(
   Ntimes = Ntimes,
   Npreds = ncol(bsMat),
   y      = array(cases$y, c(Ntimes, Nareas)),
-  n      = array(cases$n, c(Ntimes, Nareas)),
+  n      = filter(cases, id_time == 1) %>% pull(n),
   x      = bsMat,
   edge1  = edges$id_area.x,
   edge2  = edges$id_area.y,
   w      = w
 )
 
-# object <- rstan::stan_model("stan/model_beneito.stan")
-# fit <- rstan::sampling(object = object, data = stan_data, iter = 4)
+object <- rstan::stan_model("stan/model_beneito.stan")
+fit <- rstan::sampling(object = object, data = stan_data, iter = 4)
