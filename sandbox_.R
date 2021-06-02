@@ -2,43 +2,67 @@ library(dplyr)
 library(rstan)
 library(magrittr)
 library(splines2)
-library(posterior)
 options(mc.cores = parallel::detectCores())
 rstan::rstan_options(auto_write = TRUE)
 
-# Retrieve the cases and the neighbors
+# Build the relevant part of the project
 targets::tar_make("casos0")
 targets::tar_make("vecinos")
-casos0 <- targets::tar_read("casos0") 
-vecinos <- targets::tar_read("vecinos") %>%
-  dplyr::filter(codigo_comuna < codigo_vecino)
+targets::tar_make("comunas")
 
-# Compute standardized indices for communes
-id_area <- 
-  targets::tar_read("vecinos") %>% 
-  dplyr::distinct(codigo_comuna) %>%
-  dplyr::mutate(id_area = 1:dplyr::n())
+# Set the target regions
+regions <- 13
 
-# Compute standardized indices for weeks
-id_time <-
-  targets::tar_read("casos0") %>% 
-  dplyr::distinct(codigo_semana) %>%
-  dplyr::arrange(codigo_semana) %>%
-  dplyr::mutate(id_time = 1:dplyr::n())
+# Retrieve the areas in the selected regions
+communes <- 
+  targets::tar_read("comunas") %>%
+  dplyr::filter(codigo_region %in% regions) %>%
+  pull(codigo_comuna)
 
-# Add standardized ids to vecinos
+# Retrieve the links
 edges <- 
   targets::tar_read("vecinos") %>%
-  dplyr::inner_join(id_area, by = "codigo_comuna") %>%
-  dplyr::inner_join(id_area, by = c("codigo_vecino" = "codigo_comuna"))
+  dplyr::rename(edge1 = codigo_comuna, edge2 = codigo_vecino) %>%
+  dplyr::filter(
+    edge1 < edge2, 
+    edge1 %in% communes, 
+    edge2 %in% communes
+  )
 
-# Add standardized ids to casos0
+# Retrieve the cases
 cases <- 
-  casos0 %>%
+  targets::tar_read("casos0") %>%
+  dplyr::filter(
+    codigo_comuna %in% c(edges$edge1, edges$edge2),
+    codigo_region %in% regions
+  ) %>%
+  dplyr::rename(y = casos_nuevos)
+
+# Compute a standardized index for areas
+id_area <- 
+  cases %>% 
+  dplyr::mutate(id_area = dplyr::dense_rank(codigo_comuna)) %>%
+  dplyr::distinct(codigo_comuna, id_area)
+
+# Compute a standardized index for times
+id_time <- 
+  cases %>% 
+  dplyr::mutate(id_time = dplyr::dense_rank(codigo_semana)) %>%
+  dplyr::distinct(codigo_semana, id_time)
+
+# Add standardized ids to edges
+edges <- 
+  edges %>%
+  dplyr::inner_join(id_area, by = c("edge1" = "codigo_comuna")) %>%
+  dplyr::inner_join(id_area, by = c("edge2" = "codigo_comuna"))
+
+# Add standardized ids to cases
+cases <- 
+  cases %>%
   inner_join(id_area) %>%
   inner_join(id_time) %>%
   arrange(id_area, id_time) %>%
-  select(id_area, id_time, y = casos_nuevos, n)
+  select(id_area, id_time, y, n)
 
 # Compute B-splines design matrix for cases$id_week
 x <- unique(cases$id_time)
@@ -65,6 +89,4 @@ stan_data <- list(
   w      = w
 )
 
-fit <- stan(file = "stan/model_beneito.stan", data = stan_data, iter = 4)
-Res <- rstan::extract(fit, "R")$R
-Re_mean <- apply(Res, c(2, 3), mean)
+fit <- stan("stan/model_beneito.stan", data = stan_data, iter = 10, seed = 1)
