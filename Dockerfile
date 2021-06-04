@@ -10,6 +10,11 @@ RUN rm -rf /var/lib/apt/lists/
 RUN install2.r --error --deps TRUE rstan
 RUN rm -rf /tmp/downloaded_packages/ /tmp/*.rds
 
+# Install INLA
+RUN install2.r --error \
+  --repos "https://inla.r-inla-download.org/R/stable" \
+  INLA 
+
 # Global site-wide config -- neeeded for building packages
 RUN mkdir -p $HOME/.R/
 RUN echo "CXXFLAGS=-O3 -mtune=native -march=native -Wno-unused-variable -Wno-unused-function -flto -ffat-lto-objects  -Wno-unused-local-typedefs \n" >> $HOME/.R/Makevars
