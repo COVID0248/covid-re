@@ -59,12 +59,12 @@ edges <-
 # Add standardized ids to cases
 cases <- 
   cases %>%
-  inner_join(id_area) %>%
-  inner_join(id_time) %>%
-  arrange(id_area, id_time) %>%
-  select(id_area, id_time, y, n)
+  dplyr::inner_join(id_area) %>%
+  dplyr::inner_join(id_time) %>%
+  dplyr::arrange(id_area, id_time) %>%
+  dplyr::select(id_area, id_time, y, n)
 
-# Compute B-splines design matrix for cases$id_week
+# Compute B-splines design matrix for cases$id_time
 x <- unique(cases$id_time)
 knots <- seq.int(min(x), max(x), by = 3)
 bsMat <- splines2::bSpline(x, knots = knots, degree = 3)
@@ -89,4 +89,14 @@ stan_data <- list(
   w      = w
 )
 
-fit <- stan("stan/model_beneito.stan", data = stan_data, iter = 10, seed = 1)
+fit <-
+  "stan/model_beneito.stan" %>%
+  rstan::stan(
+    data = stan_data,
+    iter = 10,
+    seed = 1,
+    control = list(
+      max_treedepth = 15,
+      adapt_delta = 0.90
+    )
+  )
