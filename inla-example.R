@@ -93,7 +93,7 @@ for (i in 1:26) {
   df[[paste0("id", i)]] <- df$id_area
 }
 
-fis  <- paste0("f(id", 1:2, ", x", 1:2, ", model = 'besag', graph = adj_mat, hyper = prec_prior)", collapse = " + ")
+fis  <- paste0("f(id", 1:26, ", x", 1:26, ", model = 'besag', graph = adj_mat, hyper = prec_prior)", collapse = " + ")
 fmla <- paste0("y ~ ", fis)
 fmla
 
@@ -104,6 +104,8 @@ fit <-
     family = "poisson",
     E = n, 
     control.predictor = list(compute = TRUE),
-    control.compute = list(dic = TRUE, waic = TRUE)
+    control.compute = list(dic = TRUE, waic = TRUE, config = TRUE)
   )
-summary(fit)
+
+fit$summary.random$id2
+
