@@ -3,6 +3,7 @@
 library(dplyr)
 library(INLA)
 library(sf)
+inla.setOption(pardiso.license = "~/sys/licenses/pardiso.lic")
 
 library(dplyr)
 library(rstan)
@@ -77,23 +78,23 @@ cases <-
 
 # Compute B-splines design matrix for cases$id_time
 x <- unique(cases$id_time)
-knots <- seq.int(min(x), max(x), by = 3)
+knots <- seq.int(min(x), max(x), by = 8)
 bsMat <- splines2::bSpline(x, knots = knots, degree = 3)
 bsMat2 <- splines2::bSpline(cases$id_time, knots = knots, degree = 3)
 bsdf <- 
   as.data.frame(bsMat2) %>%
-  magrittr::set_colnames(paste0("x", 1:26))
+  magrittr::set_colnames(paste0("x", 1:12))
 
 df <- cbind(cases, bsdf)
 
 prec_prior <- list(prec = list(param = c(0.001, 0.001)))
 
-
-for (i in 1:26) {
+Nvars <- 12
+for (i in 1:Nvars) {
   df[[paste0("id", i)]] <- df$id_area
 }
 
-fis  <- paste0("f(id", 1:26, ", x", 1:26, ", model = 'besag', graph = adj_mat, hyper = prec_prior)", collapse = " + ")
+fis  <- paste0("f(id", 1:Nvars, ", x", 1:Nvars, ", model = 'besag', graph = adj_mat, hyper = prec_prior)", collapse = " + ")
 fmla <- paste0("y ~ ", fis)
 fmla
 
@@ -104,7 +105,12 @@ fit <-
     family = "poisson",
     E = n, 
     control.predictor = list(compute = TRUE),
-    control.compute = list(dic = TRUE, waic = TRUE, config = TRUE)
+    control.compute = list(
+      dic = TRUE, 
+      waic = TRUE, 
+      config = TRUE, 
+      openmp.strategy = "pardiso.parallel"
+    )
   )
 
 fit$summary.random$id2
