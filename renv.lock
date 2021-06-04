@@ -5,6 +5,10 @@
       {
         "Name": "CRAN",
         "URL": "https://packagemanager.rstudio.com/all/latest"
+      },
+      {
+        "Name": "INLA",
+        "URL": "https://inla.r-inla-download.org/R/stable"
       }
     ]
   },
@@ -26,7 +30,8 @@
     "INLA": {
       "Package": "INLA",
       "Version": "21.02.23",
-      "Source": "unknown",
+      "Source": "Repository",
+      "Repository": "INLA",
       "Hash": "725b04740603586ddcb35f332184a480"
     },
     "KernSmooth": {
