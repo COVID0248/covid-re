@@ -26,13 +26,15 @@ RUN echo "options(mc.cores = parallel::detectCores())\n" >> /home/rstudio/.Rprof
 RUN echo "rstan::rstan_options(auto_write = TRUE)\n" >> /home/rstudio/.Rprofile
 
 # # Build and run for development
-# docker build --target dev -t covid-re .
+# docker build -t covid-re .
 # sudo docker run \
 #     --rm \
 #     -d \
 #     -p 8787:8787 \
 #     -e "ROOT=TRUE" \
 #     -e PASSWORD=123 \
+#     -e USER=igutierrezm \
+#     -v $HOME/sys:/home/rstudio/sys \
 #     -v $HOME/.gitconfig:/home/rstudio/.gitconfig \
 #     -v $HOME/.ssh:/home/rstudio/.ssh \
 #     -v $HOME/.aws:/home/rstudio/.aws \
