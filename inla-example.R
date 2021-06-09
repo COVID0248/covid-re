@@ -1,16 +1,14 @@
 # Install INLA
 # install.packages("INLA",repos=c(getOption("repos"),INLA="https://inla.r-inla-download.org/R/stable"), dep=TRUE)
 library(dplyr)
+library(purrr)
 library(INLA)
 library(sf)
-inla.setOption(pardiso.license = "~/sys/licenses/pardiso.lic")
-
-library(dplyr)
-library(rstan)
+library(sn)
 library(magrittr)
 library(splines2)
+inla.setOption(pardiso.license = "~/sys/licenses/pardiso.lic")
 options(mc.cores = parallel::detectCores())
-rstan::rstan_options(auto_write = TRUE)
 
 # Build the relevant part of the project
 targets::tar_make("casos0")
@@ -78,24 +76,22 @@ cases <-
 
 # Compute B-splines design matrix for cases$id_time
 x <- unique(cases$id_time)
-knots <- seq.int(min(x), max(x), by = 8)
-bsMat <- splines2::bSpline(x, knots = knots, degree = 3)
-bsMat2 <- splines2::bSpline(cases$id_time, knots = knots, degree = 3)
+knots <- seq.int(min(x), max(x), by = 12)
+bsMat <- splines2::bSpline(cases$id_time, knots = knots, degree = 3)
+Nvars <- ncol(bsMat)
 bsdf <- 
-  as.data.frame(bsMat2) %>%
-  magrittr::set_colnames(paste0("x", 1:12))
+  as.data.frame(bsMat) %>%
+  magrittr::set_colnames(paste0("x", 1:Nvars))
 
 df <- cbind(cases, bsdf)
-
 prec_prior <- list(prec = list(param = c(0.001, 0.001)))
 
-Nvars <- 12
 for (i in 1:Nvars) {
   df[[paste0("id", i)]] <- df$id_area
 }
 
 fis  <- paste0("f(id", 1:Nvars, ", x", 1:Nvars, ", model = 'besag', graph = adj_mat, hyper = prec_prior)", collapse = " + ")
-fmla <- paste0("y ~ ", fis)
+fmla <- paste0("y ~ 0 + ", fis)
 fmla
 
 fit <- 
@@ -113,5 +109,18 @@ fit <-
     )
   )
 
-fit$summary.random$id2
+expXB_samples <- 
+  inla.posterior.sample(n = 2L, fit, add.names = FALSE) %>%
+  purrr::map(function(x) {
+    b <- 
+      x[["latent"]] %>%
+      tail(Nvars * nrow(id_area)) %>%
+      matrix(Nvars, nrow(id_area))
+    exp(bsMat %*% b)
+  })
 
+
+w <- numeric(4)
+get_w <- function(a0, b0, maxlag = 24) {
+  
+}
