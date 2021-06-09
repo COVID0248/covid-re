@@ -55,6 +55,13 @@
       "Repository": "RSPM",
       "Hash": "08588806cba69f04797dab50627428ed"
     },
+    "MatrixModels": {
+      "Package": "MatrixModels",
+      "Version": "0.5-0",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "366a8838782928e398b8762c932a42a3"
+    },
     "R0": {
       "Package": "R0",
       "Version": "1.2-6",
@@ -103,6 +110,13 @@
       "Source": "Repository",
       "Repository": "RSPM",
       "Hash": "551d50addb18c7b99637aa377a25afc8"
+    },
+    "SparseM": {
+      "Package": "SparseM",
+      "Version": "1.81",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "2042cd9759cc89a453c4aefef0ce9aae"
     },
     "StanHeaders": {
       "Package": "StanHeaders",
@@ -257,6 +271,13 @@
       "Source": "Repository",
       "Repository": "RSPM",
       "Hash": "abea3384649ef37f60ef51ce002f3547"
+    },
+    "conquer": {
+      "Package": "conquer",
+      "Version": "1.0.2",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "a31720f692920e635ecef0481d478247"
     },
     "cpp11": {
       "Package": "cpp11",
@@ -552,6 +573,13 @@
       "Repository": "RSPM",
       "Hash": "eaee7d2a6f3ed4491df868611cb064cc"
     },
+    "mnormt": {
+      "Package": "mnormt",
+      "Version": "2.0.2",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "7e6ee68a01d6c87c69087d4a250ee763"
+    },
     "munsell": {
       "Package": "munsell",
       "Version": "0.5.0",
@@ -579,6 +607,13 @@
       "Source": "Repository",
       "Repository": "RSPM",
       "Hash": "4fb7f8dd20e72cf38e9d7feb252191b2"
+    },
+    "numDeriv": {
+      "Package": "numDeriv",
+      "Version": "2016.8-1.1",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "df58958f293b166e4ab885ebcad90e02"
     },
     "openssl": {
       "Package": "openssl",
@@ -755,6 +790,13 @@
       "Repository": "RSPM",
       "Hash": "97def703420c8ab10d8f0e6c72101e02"
     },
+    "quantreg": {
+      "Package": "quantreg",
+      "Version": "5.86",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "28692dfa3efea8e19d29347d05f5a489"
+    },
     "rematch2": {
       "Package": "rematch2",
       "Version": "2.1.2",
@@ -824,6 +866,13 @@
       "Source": "Repository",
       "Repository": "RSPM",
       "Hash": "d82215b501772c9faadb4dcd71395c7d"
+    },
+    "sn": {
+      "Package": "sn",
+      "Version": "2.0.0",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "7144b8ce57a768ff87004d7bfb4d2b2c"
     },
     "sp": {
       "Package": "sp",
@@ -908,6 +957,13 @@
       "Source": "Repository",
       "Repository": "RSPM",
       "Hash": "db9a6f2cf147751322d22c9f6647c7bd"
+    },
+    "tmvnsim": {
+      "Package": "tmvnsim",
+      "Version": "1.0-2",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "50470c7ed0cc8099cbc17b38f0ef621f"
     },
     "units": {
       "Package": "units",
