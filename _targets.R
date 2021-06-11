@@ -3,6 +3,12 @@ suppressMessages(library(magrittr))
 suppressMessages(library(dbplyr))
 suppressMessages(library(rstan))
 suppressMessages(library(sf))
+suppressMessages(library(sn))
+suppressMessages(library(INLA))
+suppressMessages(library(splines2))
+inla.setOption(pardiso.license = "~/sys/licenses/pardiso.lic")
+set.seed(1)
+
 rstan::rstan_options(auto_write = TRUE)
 options(mc.cores = parallel::detectCores())
 source("R/utils.R")
@@ -36,8 +42,9 @@ list(
   targets::tar_target(r_jrc, get_r_jrc(casos)),
   targets::tar_target(r_rki, get_r_rki(casos)),
   targets::tar_target(r_wallinga, get_r_wallinga(casos)),
+  targets::tar_target(r_martinez, get_r_martinez(casos0, vecinos, comunas)),
   targets::tar_target(r, get_r(
-    r_systrom, r_cislaghi, r_jrc, r_rki, r_wallinga
+    r_systrom, r_cislaghi, r_jrc, r_rki, r_wallinga, r_martinez
   )),
   targets::tar_target(covariates, get_covariates(
     casos0,

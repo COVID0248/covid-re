@@ -94,3 +94,21 @@ long_boxplot <- function(data, varname) {
     ggplot2::geom_boxplot() +
     ggplot2::theme_classic()
 }
+
+
+# (Helper function) simulate (weekly) infectivity rates
+sim_weights <- function() {
+  ws0 <- EpiEstim::discr_si(1:25, 4.7, 2.9)
+  ws <- numeric(length(ws0) %/% 7 + 1)
+  for (s in 1:length(ws0)) {
+    ws[1 + (s - 1) %/% 7] <- ws[1 + (s - 1) %/% 7] + ws0[s]
+  }
+  ws  
+}
+
+# (Helper function) select nrow(mat) - h rows of mat, starting from row k,
+my_slice <- function(mat, h, k) {
+  n <- nrow(mat)
+  mat[k:(k + n - h), ]
+}
+
