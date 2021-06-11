@@ -27,6 +27,13 @@
       "Repository": "RSPM",
       "Hash": "030aaec5bc6553f35347cbb1e70b1a17"
     },
+    "EpiEstim": {
+      "Package": "EpiEstim",
+      "Version": "2.2-4",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "aeb8c10e5965a419755eb6dd42a3656d"
+    },
     "INLA": {
       "Package": "INLA",
       "Version": "21.02.23",
@@ -47,6 +54,13 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "d1bc1c8e9c0ace57ec9ffea01021d45f"
+    },
+    "MCMCpack": {
+      "Package": "MCMCpack",
+      "Version": "1.5-0",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "2f361454b48bcf6a6a3271cc1db9432f"
     },
     "Matrix": {
       "Package": "Matrix",
@@ -153,6 +167,13 @@
       "Repository": "RSPM",
       "Hash": "50c838a310445e954bc13f26f26a6ecf"
     },
+    "aweek": {
+      "Package": "aweek",
+      "Version": "1.0.2",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "8a5d6323e38f0ab57fbf069cf49f9155"
+    },
     "backports": {
       "Package": "backports",
       "Version": "1.2.1",
@@ -250,6 +271,13 @@
       "Source": "Repository",
       "Repository": "RSPM",
       "Hash": "a94ba44cee3ea571e813721e64184172"
+    },
+    "coarseDataTools": {
+      "Package": "coarseDataTools",
+      "Version": "0.6-5",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "01516afd1c0b4f33fcfb2a067a2346f5"
     },
     "coda": {
       "Package": "coda",
@@ -384,6 +412,13 @@
       "Repository": "RSPM",
       "Hash": "dad6793a5a1f73c8e91f1a1e3e834b05"
     },
+    "fitdistrplus": {
+      "Package": "fitdistrplus",
+      "Version": "1.1-5",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "df82a154b37aad59c6a9cc2b54614296"
+    },
     "foreach": {
       "Package": "foreach",
       "Version": "1.5.1",
@@ -453,6 +488,13 @@
       "Source": "Repository",
       "Repository": "RSPM",
       "Hash": "7b1f856410253d56ea67ad808f7cdff6"
+    },
+    "incidence": {
+      "Package": "incidence",
+      "Version": "1.7.3",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "39f21a0b2551af74c6c60a75fa0ff5c4"
     },
     "ini": {
       "Package": "ini",
@@ -551,6 +593,13 @@
       "Source": "Repository",
       "Repository": "RSPM",
       "Hash": "c318d148056e5bb8d7de79b0876f9ae6"
+    },
+    "mcmc": {
+      "Package": "mcmc",
+      "Version": "0.9-7",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "aab79cde1fef3861c9eed1cbc3f931fb"
     },
     "mgcv": {
       "Package": "mgcv",
@@ -908,6 +957,13 @@
       "Source": "Repository",
       "Repository": "RSPM",
       "Hash": "0759e6b6c0957edb1311028a49a35e76"
+    },
+    "survival": {
+      "Package": "survival",
+      "Version": "3.2-7",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "39c4ac6d22dad33db0ee37b40810ea12"
     },
     "sys": {
       "Package": "sys",
