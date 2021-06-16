@@ -42,9 +42,18 @@ list(
   targets::tar_target(r_jrc, get_r_jrc(casos)),
   targets::tar_target(r_rki, get_r_rki(casos)),
   targets::tar_target(r_wallinga, get_r_wallinga(casos)),
-  targets::tar_target(r_martinez, get_r_martinez(casos0, vecinos, comunas)),
+  targets::tar_target(r_martinez_leroux, get_r_martinez_leroux(casos0, vecinos, comunas)),
+  targets::tar_target(r_martinez_besag, get_r_martinez_besag(casos0, vecinos, comunas)),
+  targets::tar_target(r_martinez_bym, get_r_martinez_bym(casos0, vecinos, comunas)),
   targets::tar_target(r, get_r(
-    r_systrom, r_cislaghi, r_jrc, r_rki, r_wallinga, r_martinez
+    r_systrom, 
+    r_cislaghi, 
+    r_jrc, 
+    r_rki, 
+    r_wallinga, 
+    r_martinez_leroux,
+    r_martinez_besag,
+    r_martinez_bym
   )),
   targets::tar_target(covariates, get_covariates(
     casos0,
@@ -64,7 +73,7 @@ list(
   targets::tar_target(cov, get_cov(fit)),
   targets::tar_target(b, get_b(fit)),
   targets::tar_target(plot_r, long_boxplot(r_wallinga, "r")),
-  targets::tar_target(plot_pvc, long_boxplot(pvc, "pvc")),
+  targets::tar_target(plot_pvc, long_boxplot(pp_vecinos_cuarentena, "pp_vecinos_cuarentena")),
   targets::tar_target(plot_pcr, long_boxplot(pcr, "pcr")),
   targets::tar_target(plot_vacunados1, long_boxplot(vacunados1, "vacunados1")),
   targets::tar_target(plot_vacunados2, long_boxplot(vacunados2, "vacunados2")),
@@ -75,5 +84,3 @@ list(
   targets::tar_target(plot_r_ts, get_plot_r_ts(r, comunas)),
   targets::tar_target(plot_r_bp, get_plot_r_bp(r, comunas))
 )
-
-# TODO:
