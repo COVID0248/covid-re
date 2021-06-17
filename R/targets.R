@@ -609,286 +609,6 @@ get_r_wallinga <- function(data) {
     tibble::as_tibble()
 }
 
-get_r_martinez_besag <- function(casos0, vecinos, comunas) {
-  r_eff_inla <- function(regions) {
-    # Retrieve the areas in the selected regions
-    communes <- 
-      targets::tar_read("comunas") %>%
-      dplyr::filter(codigo_region %in% regions) %>%
-      dplyr::pull(codigo_comuna)
-    
-    # Retrieve the links
-    edges <- 
-      targets::tar_read("vecinos") %>%
-      dplyr::rename(edge1 = codigo_comuna, edge2 = codigo_vecino) %>%
-      dplyr::filter(
-        edge1 %in% communes, 
-        edge2 %in% communes
-      )
-    
-    # Retrieve the cases
-    cases <- 
-      targets::tar_read("casos0") %>%
-      dplyr::filter(
-        codigo_comuna %in% c(edges$edge1, edges$edge2),
-        codigo_region %in% regions
-      ) %>%
-      dplyr::rename(y = casos_nuevos)
-    
-    # Compute a standardized index for areas
-    id_area <- 
-      cases %>% 
-      dplyr::mutate(id_area = dplyr::dense_rank(codigo_comuna)) %>%
-      dplyr::distinct(codigo_comuna, id_area)
-    
-    # Compute a standardized index for times
-    id_time <- 
-      cases %>% 
-      dplyr::mutate(id_time = dplyr::dense_rank(codigo_semana)) %>%
-      dplyr::distinct(codigo_semana, id_time)
-    
-    # Add standardized ids to edges
-    edges <- 
-      edges %>%
-      dplyr::inner_join(id_area, by = c("edge1" = "codigo_comuna")) %>%
-      dplyr::inner_join(id_area, by = c("edge2" = "codigo_comuna"))
-    
-    # Compute adjacency matrix
-    adj_mat <- 
-      edges %$%
-      sparseMatrix(i = id_area.x, j = id_area.y) %>%
-      as("dgCMatrix")
-    
-    # Add standardized ids to cases
-    cases <- 
-      cases %>%
-      dplyr::inner_join(id_area) %>%
-      dplyr::inner_join(id_time) %>%
-      dplyr::arrange(id_area, id_time) %>%
-      dplyr::select(id_area, id_time, y, n)
-    
-    # Compute B-splines design matrix for cases$id_time
-    x <- unique(cases$id_time)
-    knots <- seq.int(min(x), max(x), by = 12)
-    bsMat <- splines2::bSpline(cases$id_time, knots = knots, degree = 3)
-    bsMat0 <- splines2::bSpline(x, knots = knots, degree = 3)
-    Nvars <- ncol(bsMat)
-    bsdf <- 
-      as.data.frame(bsMat) %>%
-      magrittr::set_colnames(paste0("x", 1:Nvars))
-    
-    df <- cbind(cases, bsdf)
-    prec_prior <- list(prec = list(param = c(0.001, 0.001)))
-    
-    for (i in 1:Nvars) {
-      df[[paste0("id", i)]] <- df$id_area
-    }
-    
-    fis  <- paste0("f(id", 1:Nvars, ", x", 1:Nvars, ", model = 'besag', graph = adj_mat, hyper = prec_prior)", collapse = " + ")
-    fmla <- paste0("y ~ 0 + ", fis)
-    fmla
-    
-    fit <- 
-      INLA::inla(
-        formula = as.formula(fmla),
-        data = df,
-        family = "poisson",
-        E = n, 
-        control.predictor = list(compute = TRUE),
-        control.compute = list(
-          dic = TRUE, 
-          waic = TRUE, 
-          config = TRUE, 
-          openmp.strategy = "pardiso.parallel"
-        )
-      )
-    
-    nsims <- 2000L
-    R_samples <- 
-      inla.posterior.sample(n = nsims, fit, add.names = FALSE, seed = 1L) %>%
-      purrr::map(function(x) {
-        b <- 
-          x[["latent"]] %>%
-          tail(Nvars * nrow(id_area)) %>%
-          matrix(Nvars, nrow(id_area))
-        
-        expXb <-
-          exp(bsMat0 %*% b)
-        
-        ws <- 
-          sim_weights()
-        
-        R_samples <- 
-          my_slice(expXb, 5, 1) / (
-            ws[1] * my_slice(expXb, 5, 2) + 
-              ws[2] * my_slice(expXb, 5, 3) + 
-              ws[3] * my_slice(expXb, 5, 4) + 
-              ws[4] * my_slice(expXb, 5, 5)
-          )
-      }) %>%
-      purrr::reduce(`+`) %>%
-      magrittr::divide_by(nsims) %>%
-      dplyr::as_tibble() %>%
-      dplyr::mutate(id_time = 4 + 1:dplyr::n()) %>%
-      tidyr::pivot_longer(
-        cols = -id_time, 
-        values_to = "r",
-        names_prefix = "V", 
-        names_to = "id_area",
-        names_transform = list(id_area = as.integer)
-      ) %>%
-      dplyr::inner_join(id_area) %>%
-      dplyr::inner_join(id_time) %>%
-      dplyr::mutate(id_region = regions, method = "martinez (besag)") %>%
-      dplyr::select(-c(id_area, id_time, id_region))
-  }
-  
-  R_samples <- 
-    1:16 %>%
-    purrr::map(r_eff_inla) %>%
-    purrr::reduce(rbind)
-}
-
-get_r_martinez_besagproper <- function(casos0, vecinos, comunas) {
-  r_eff_inla <- function(regions) {
-    # Retrieve the areas in the selected regions
-    communes <- 
-      targets::tar_read("comunas") %>%
-      dplyr::filter(codigo_region %in% regions) %>%
-      dplyr::pull(codigo_comuna)
-    
-    # Retrieve the links
-    edges <- 
-      targets::tar_read("vecinos") %>%
-      dplyr::rename(edge1 = codigo_comuna, edge2 = codigo_vecino) %>%
-      dplyr::filter(
-        edge1 %in% communes, 
-        edge2 %in% communes
-      )
-    
-    # Retrieve the cases
-    cases <- 
-      targets::tar_read("casos0") %>%
-      dplyr::filter(
-        codigo_comuna %in% c(edges$edge1, edges$edge2),
-        codigo_region %in% regions
-      ) %>%
-      dplyr::rename(y = casos_nuevos)
-    
-    # Compute a standardized index for areas
-    id_area <- 
-      cases %>% 
-      dplyr::mutate(id_area = dplyr::dense_rank(codigo_comuna)) %>%
-      dplyr::distinct(codigo_comuna, id_area)
-    
-    # Compute a standardized index for times
-    id_time <- 
-      cases %>% 
-      dplyr::mutate(id_time = dplyr::dense_rank(codigo_semana)) %>%
-      dplyr::distinct(codigo_semana, id_time)
-    
-    # Add standardized ids to edges
-    edges <- 
-      edges %>%
-      dplyr::inner_join(id_area, by = c("edge1" = "codigo_comuna")) %>%
-      dplyr::inner_join(id_area, by = c("edge2" = "codigo_comuna"))
-    
-    # Compute adjacency matrix
-    adj_mat <- 
-      edges %$%
-      sparseMatrix(i = id_area.x, j = id_area.y) %>%
-      as("dgCMatrix")
-    
-    # Add standardized ids to cases
-    cases <- 
-      cases %>%
-      dplyr::inner_join(id_area) %>%
-      dplyr::inner_join(id_time) %>%
-      dplyr::arrange(id_area, id_time) %>%
-      dplyr::select(id_area, id_time, y, n)
-    
-    # Compute B-splines design matrix for cases$id_time
-    x <- unique(cases$id_time)
-    knots <- seq.int(min(x), max(x), by = 12)
-    bsMat <- splines2::bSpline(cases$id_time, knots = knots, degree = 3)
-    bsMat0 <- splines2::bSpline(x, knots = knots, degree = 3)
-    Nvars <- ncol(bsMat)
-    bsdf <- 
-      as.data.frame(bsMat) %>%
-      magrittr::set_colnames(paste0("x", 1:Nvars))
-    
-    df <- cbind(cases, bsdf)
-    prec_prior <- list(prec = list(param = c(0.001, 0.001)))
-    
-    for (i in 1:Nvars) {
-      df[[paste0("id", i)]] <- df$id_area
-    }
-    
-    fis  <- paste0("f(id", 1:Nvars, ", x", 1:Nvars, ", model = 'besagproper', graph = adj_mat, hyper = prec_prior)", collapse = " + ")
-    fmla <- paste0("y ~ 0 + ", fis)
-    fmla
-    
-    fit <- 
-      INLA::inla(
-        formula = as.formula(fmla),
-        data = df,
-        family = "poisson",
-        E = n, 
-        control.predictor = list(compute = TRUE),
-        control.compute = list(
-          dic = TRUE, 
-          waic = TRUE, 
-          config = TRUE, 
-          openmp.strategy = "pardiso.parallel"
-        )
-      )
-    
-    nsims <- 2000L
-    R_samples <- 
-      inla.posterior.sample(n = nsims, fit, add.names = FALSE, seed = 1L) %>%
-      purrr::map(function(x) {
-        b <- 
-          x[["latent"]] %>%
-          tail(Nvars * nrow(id_area)) %>%
-          matrix(Nvars, nrow(id_area))
-        
-        expXb <-
-          exp(bsMat0 %*% b)
-        
-        ws <- 
-          sim_weights()
-        
-        R_samples <- 
-          my_slice(expXb, 5, 1) / (
-            ws[1] * my_slice(expXb, 5, 2) + 
-              ws[2] * my_slice(expXb, 5, 3) + 
-              ws[3] * my_slice(expXb, 5, 4) + 
-              ws[4] * my_slice(expXb, 5, 5)
-          )
-      }) %>%
-      purrr::reduce(`+`) %>%
-      magrittr::divide_by(nsims) %>%
-      dplyr::as_tibble() %>%
-      dplyr::mutate(id_time = 4 + 1:dplyr::n()) %>%
-      tidyr::pivot_longer(
-        cols = -id_time, 
-        values_to = "r",
-        names_prefix = "V", 
-        names_to = "id_area",
-        names_transform = list(id_area = as.integer)
-      ) %>%
-      dplyr::inner_join(id_area) %>%
-      dplyr::inner_join(id_time) %>%
-      dplyr::mutate(id_region = regions, method = "martinez (besag proper)") %>%
-      dplyr::select(-c(id_area, id_time, id_region))
-  }
-  
-  R_samples <- 
-    1:16 %>%
-    purrr::map(r_eff_inla) %>%
-    purrr::reduce(rbind)
-}
-
 get_r_martinez_leroux <- function(casos0, vecinos, comunas) {
   r_eff_inla <- function(regions) {
     # Retrieve the areas in the selected regions
@@ -1022,7 +742,147 @@ get_r_martinez_leroux <- function(casos0, vecinos, comunas) {
       ) %>%
       dplyr::inner_join(id_area) %>%
       dplyr::inner_join(id_time) %>%
-      dplyr::mutate(id_region = regions, method = "martinez (leroux)") %>%
+      dplyr::mutate(id_region = regions, method = "martinez 1") %>%
+      dplyr::select(-c(id_area, id_time, id_region))
+  }
+  
+  R_samples <- 
+    1:16 %>%
+    purrr::map(r_eff_inla) %>%
+    purrr::reduce(rbind)
+}
+
+get_r_martinez_besag <- function(casos0, vecinos, comunas) {
+  r_eff_inla <- function(regions) {
+    # Retrieve the areas in the selected regions
+    communes <- 
+      targets::tar_read("comunas") %>%
+      dplyr::filter(codigo_region %in% regions) %>%
+      dplyr::pull(codigo_comuna)
+    
+    # Retrieve the links
+    edges <- 
+      targets::tar_read("vecinos") %>%
+      dplyr::rename(edge1 = codigo_comuna, edge2 = codigo_vecino) %>%
+      dplyr::filter(
+        edge1 %in% communes, 
+        edge2 %in% communes
+      )
+    
+    # Retrieve the cases
+    cases <- 
+      targets::tar_read("casos0") %>%
+      dplyr::filter(
+        codigo_comuna %in% c(edges$edge1, edges$edge2),
+        codigo_region %in% regions
+      ) %>%
+      dplyr::rename(y = casos_nuevos)
+    
+    # Compute a standardized index for areas
+    id_area <- 
+      cases %>% 
+      dplyr::mutate(id_area = dplyr::dense_rank(codigo_comuna)) %>%
+      dplyr::distinct(codigo_comuna, id_area)
+    
+    # Compute a standardized index for times
+    id_time <- 
+      cases %>% 
+      dplyr::mutate(id_time = dplyr::dense_rank(codigo_semana)) %>%
+      dplyr::distinct(codigo_semana, id_time)
+    
+    # Add standardized ids to edges
+    edges <- 
+      edges %>%
+      dplyr::inner_join(id_area, by = c("edge1" = "codigo_comuna")) %>%
+      dplyr::inner_join(id_area, by = c("edge2" = "codigo_comuna"))
+    
+    # Compute adjacency matrix
+    adj_mat <- 
+      edges %$%
+      sparseMatrix(i = id_area.x, j = id_area.y) %>%
+      as("dgCMatrix")
+    
+    # Add standardized ids to cases
+    cases <- 
+      cases %>%
+      dplyr::inner_join(id_area) %>%
+      dplyr::inner_join(id_time) %>%
+      dplyr::arrange(id_area, id_time) %>%
+      dplyr::select(id_area, id_time, y, n)
+    
+    # Compute B-splines design matrix for cases$id_time
+    x <- unique(cases$id_time)
+    knots <- seq.int(min(x), max(x), by = 12)
+    bsMat <- splines2::bSpline(cases$id_time, knots = knots, degree = 3)
+    bsMat0 <- splines2::bSpline(x, knots = knots, degree = 3)
+    Nvars <- ncol(bsMat)
+    bsdf <- 
+      as.data.frame(bsMat) %>%
+      magrittr::set_colnames(paste0("x", 1:Nvars))
+    
+    df <- cbind(cases, bsdf)
+    prec_prior <- list(prec = list(param = c(0.001, 0.001)))
+    
+    for (i in 1:Nvars) {
+      df[[paste0("id", i)]] <- df$id_area
+    }
+    
+    fis  <- paste0("f(id", 1:Nvars, ", x", 1:Nvars, ", model = 'besag', graph = adj_mat, hyper = prec_prior)", collapse = " + ")
+    fmla <- paste0("y ~ 0 + ", fis)
+    fmla
+    
+    fit <- 
+      INLA::inla(
+        formula = as.formula(fmla),
+        data = df,
+        family = "poisson",
+        E = n, 
+        control.predictor = list(compute = TRUE),
+        control.compute = list(
+          dic = TRUE, 
+          waic = TRUE, 
+          config = TRUE, 
+          openmp.strategy = "pardiso.parallel"
+        )
+      )
+    
+    nsims <- 2000L
+    R_samples <- 
+      inla.posterior.sample(n = nsims, fit, add.names = FALSE, seed = 1L) %>%
+      purrr::map(function(x) {
+        b <- 
+          x[["latent"]] %>%
+          tail(Nvars * nrow(id_area)) %>%
+          matrix(Nvars, nrow(id_area))
+        
+        expXb <-
+          exp(bsMat0 %*% b)
+        
+        ws <- 
+          sim_weights()
+        
+        R_samples <- 
+          my_slice(expXb, 5, 1) / (
+            ws[1] * my_slice(expXb, 5, 2) + 
+              ws[2] * my_slice(expXb, 5, 3) + 
+              ws[3] * my_slice(expXb, 5, 4) + 
+              ws[4] * my_slice(expXb, 5, 5)
+          )
+      }) %>%
+      purrr::reduce(`+`) %>%
+      magrittr::divide_by(nsims) %>%
+      dplyr::as_tibble() %>%
+      dplyr::mutate(id_time = 4 + 1:dplyr::n()) %>%
+      tidyr::pivot_longer(
+        cols = -id_time, 
+        values_to = "r",
+        names_prefix = "V", 
+        names_to = "id_area",
+        names_transform = list(id_area = as.integer)
+      ) %>%
+      dplyr::inner_join(id_area) %>%
+      dplyr::inner_join(id_time) %>%
+      dplyr::mutate(id_region = regions, method = "martinez 2") %>%
       dplyr::select(-c(id_area, id_time, id_region))
   }
   
@@ -1161,7 +1021,7 @@ get_r_martinez_bym <- function(casos0, vecinos, comunas) {
       ) %>%
       dplyr::inner_join(id_area) %>%
       dplyr::inner_join(id_time) %>%
-      dplyr::mutate(id_region = regions, method = "martinez (bym)") %>%
+      dplyr::mutate(id_region = regions, method = "martinez 3") %>%
       dplyr::select(-c(id_area, id_time, id_region))
   }
   
@@ -1330,28 +1190,40 @@ get_b <- function(fit) {
   broom.mixed::tidy(fit, effects = "fixed")
 }
 
-get_plot_r_p50 <- function(r) {
-  df <-
-    r %>%
-    dplyr::group_by(codigo_comuna, method) %>%
-    dplyr::summarise(r = quantile(r, 0.5, na.rm = TRUE), .groups = NULL)
+get_plot_r <- function(r) {
+  plot <- long_boxplot(r, "r")
+  ggsave("images/plot_r.png", plot, width = 7, height = 7)
+  return("images/plot_r.png")  
+}
 
-  mapa <-
-    sf::st_read("data/mapa/mapa.shp", quiet = TRUE) %>%
-    dplyr::filter(
-      !(NOM_PROVIN %in% c("ANTÁRTICA CHILENA", "ISLA DE PASCUA")),
-      !(NOM_COMUNA %in% c("JUAN FERNANDEZ"))
-    ) %>%
-    sf::st_transform('+proj=longlat +datum=WGS84') %>%
-    dplyr::mutate(codigo_comuna = CUT) %>%
-    dplyr::inner_join(df)
+get_plot_pp_vecinos_cuarentena <- function(pp_vecinos_cuarentena) {
+  plot <- long_boxplot(pp_vecinos_cuarentena, "pp_vecinos_cuarentena")
+  ggsave("images/plot_pp_vecinos_cuarentena.png", plot, width = 7, height = 7)
+  return("images/plot_pp_vecinos_cuarentena.png")  
+}
 
-  ggplot2::ggplot(data = mapa) +
-    ggplot2::geom_sf(ggplot2::aes(fill = r), size = 0.05) +
-    ggplot2::facet_grid(cols = ggplot2::vars(method)) +
-    ggplot2::theme_void() +
-    ggplot2::scale_color_grey() +
-    ggplot2::labs(fill = "R efectivo")
+get_plot_pcr <- function(pcr) {
+  plot <- long_boxplot(pcr, "pcr")
+  ggsave("images/plot_pcr.png", plot, width = 7, height = 7)
+  return("images/plot_pcr.png")  
+}
+
+get_plot_vacunados1 <- function(vacunados1) {
+  plot <- long_boxplot(vacunados1, "vacunados1")
+  ggsave("images/plot_vacunados1.png", plot, width = 7, height = 7)
+  return("images/plot_vacunados1.png")  
+}
+
+get_plot_vacunados2 <- function(vacunados2) {
+  plot <- long_boxplot(vacunados2, "vacunados2")
+  ggsave("images/plot_vacunados2.png", plot, width = 7, height = 7)
+  return("images/plot_vacunados2.png")  
+}
+
+get_plot_casos <- function(casos) {
+  plot <- long_boxplot(casos, "casos_nuevos")
+  ggsave("images/plot_casos.png", plot, width = 7, height = 7)
+  return("images/plot_casos.png")  
 }
 
 get_plot_r_p10 <- function(r) {
@@ -1370,12 +1242,44 @@ get_plot_r_p10 <- function(r) {
     dplyr::mutate(codigo_comuna = CUT) %>%
     dplyr::inner_join(df)
 
-  ggplot2::ggplot(data = mapa) +
+  plot <- 
+    ggplot2::ggplot(data = mapa) +
     ggplot2::geom_sf(ggplot2::aes(fill = r), size = 0.05) +
     ggplot2::facet_grid(cols = ggplot2::vars(method)) +
     ggplot2::theme_void() +
     ggplot2::scale_color_grey() +
     ggplot2::labs(fill = "R efectivo")
+  
+  ggsave("images/plot_r_p10.png", plot, width = 7, height = 7)
+  return("images/plot_r_p10.png")
+}
+
+get_plot_r_p50 <- function(r) {
+  df <-
+    r %>%
+    dplyr::group_by(codigo_comuna, method) %>%
+    dplyr::summarise(r = quantile(r, 0.5, na.rm = TRUE), .groups = NULL)
+  
+  mapa <-
+    sf::st_read("data/mapa/mapa.shp", quiet = TRUE) %>%
+    dplyr::filter(
+      !(NOM_PROVIN %in% c("ANTÁRTICA CHILENA", "ISLA DE PASCUA")),
+      !(NOM_COMUNA %in% c("JUAN FERNANDEZ"))
+    ) %>%
+    sf::st_transform('+proj=longlat +datum=WGS84') %>%
+    dplyr::mutate(codigo_comuna = CUT) %>%
+    dplyr::inner_join(df)
+  
+  plot <- 
+    ggplot2::ggplot(data = mapa) +
+    ggplot2::geom_sf(ggplot2::aes(fill = r), size = 0.05) +
+    ggplot2::facet_grid(cols = ggplot2::vars(method)) +
+    ggplot2::theme_void() +
+    ggplot2::scale_color_grey() +
+    ggplot2::labs(fill = "R efectivo")
+  
+  ggsave("images/plot_r_p50.png", plot, width = 7, height = 7)
+  return("images/plot_r_p50.png")
 }
 
 get_plot_r_p90 <- function(r) {
@@ -1394,12 +1298,16 @@ get_plot_r_p90 <- function(r) {
     dplyr::mutate(codigo_comuna = CUT) %>%
     dplyr::inner_join(df)
 
-  ggplot2::ggplot(data = mapa) +
+  plot <- 
+    ggplot2::ggplot(data = mapa) +
     ggplot2::geom_sf(ggplot2::aes(fill = r), size = 0.05) +
     ggplot2::facet_grid(cols = ggplot2::vars(method)) +
     ggplot2::theme_void() +
     ggplot2::scale_color_grey() +
     ggplot2::labs(fill = "R efectivo")
+
+  ggsave("images/plot_r_p90.png", plot, width = 7, height = 7)
+  return("images/plot_r_p90.png")
 }
 
 get_plot_r_ts <- function(r, comunas) {
@@ -1415,7 +1323,8 @@ get_plot_r_ts <- function(r, comunas) {
         )
     )
 
-  targets::tar_read(r) %>%
+  plot <- 
+    targets::tar_read(r) %>%
     dplyr::filter(codigo_region %in% c(5, 6, 8, 13)) %>%
     dplyr::select(!codigo_region) %>%
     dplyr::inner_join(regiones) %>%
@@ -1424,13 +1333,20 @@ get_plot_r_ts <- function(r, comunas) {
     ggplot2::geom_line(aes(colour = comuna)) +
     ggplot2::theme_classic() +
     ggplot2::labs(x = "epidemiological week", y = "effective R")
+  
+  ggsave("images/plot_r_ts.png", plot, width = 7, height = 7)
+  return("images/plot_r_ts.png")
 }
 
 get_plot_r_bp <- function(r, comunas) {
-  r %>%
+  plot <- 
+    r %>%
     ggplot2::ggplot(aes(y = r, group = codigo_semana)) +
     ggplot2::geom_boxplot(outlier.size = 0.1) +
     ggplot2::facet_grid(rows = ggplot2::vars(method), scales = "free_y") +
     ggplot2::theme_classic() +
     ggplot2::labs(x = "epidemiological week", y = "effective R")
+  
+  ggsave("images/plot_r_bp.png", plot, width = 7, height = 7)
+  return("images/plot_r_bp.png")
 }
