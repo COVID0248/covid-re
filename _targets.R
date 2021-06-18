@@ -42,8 +42,6 @@ list(
   targets::tar_target(r_jrc, get_r_jrc(casos)),
   targets::tar_target(r_rki, get_r_rki(casos)),
   targets::tar_target(r_wallinga, get_r_wallinga(casos)),
-  targets::tar_target(r_martinez_leroux, get_r_martinez_leroux(casos0, vecinos, comunas)),
-  targets::tar_target(r_martinez_besag, get_r_martinez_besag(casos0, vecinos, comunas)),
   targets::tar_target(r_martinez_bym, get_r_martinez_bym(casos0, vecinos, comunas)),
   targets::tar_target(r, get_r(
     r_systrom, 
@@ -51,8 +49,6 @@ list(
     r_jrc, 
     r_rki, 
     r_wallinga, 
-    r_martinez_leroux,
-    r_martinez_besag,
     r_martinez_bym
   )),
   targets::tar_target(covariates, get_covariates(

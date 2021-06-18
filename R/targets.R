@@ -1048,7 +1048,8 @@ get_r <- function(...) {
     r_final %>%
     dplyr::inner_join(regiones) %>%
     dplyr::select(!codigo_region) %>%
-    dplyr::rename(codigo_region = codigo_region2)
+    dplyr::rename(codigo_region = codigo_region2) %>%
+    dplyr::mutate(method = replace(method, method == "martinez 3", "M-B"))
 }
 
 #' Covariables a utilizar en nuestro modelo para el R efectivo
