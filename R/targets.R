@@ -1251,7 +1251,7 @@ get_plot_r_p10 <- function(r) {
     ggplot2::scale_color_grey() +
     ggplot2::labs(fill = "R efectivo")
   
-  ggsave("images/plot_r_p10.png", plot, width = 7, height = 7)
+  ggsave("images/plot_r_p10.png", plot, width = 7, height = 4)
   return("images/plot_r_p10.png")
 }
 
@@ -1279,7 +1279,7 @@ get_plot_r_p50 <- function(r) {
     ggplot2::scale_color_grey() +
     ggplot2::labs(fill = "R efectivo")
   
-  ggsave("images/plot_r_p50.png", plot, width = 7, height = 7)
+  ggsave("images/plot_r_p50.png", plot, width = 7, height = 4)
   return("images/plot_r_p50.png")
 }
 
@@ -1307,7 +1307,7 @@ get_plot_r_p90 <- function(r) {
     ggplot2::scale_color_grey() +
     ggplot2::labs(fill = "R efectivo")
 
-  ggsave("images/plot_r_p90.png", plot, width = 7, height = 7)
+  ggsave("images/plot_r_p90.png", plot, width = 7, height = 4)
   return("images/plot_r_p90.png")
 }
 
