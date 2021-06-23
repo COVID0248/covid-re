@@ -6,6 +6,9 @@ RUN apt-get install -y libudunits2-dev libgdal-dev libgeos-dev libproj-dev
 RUN apt-get clean
 RUN rm -rf /var/lib/apt/lists/
 
+# Install auxiliary R packages
+RUN install2.r --error --deps TRUE sp foreach
+
 # Install rstan
 RUN install2.r --error --deps TRUE rstan
 RUN rm -rf /tmp/downloaded_packages/ /tmp/*.rds
