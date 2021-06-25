@@ -6,6 +6,8 @@ suppressMessages(library(sf))
 suppressMessages(library(sn))
 suppressMessages(library(INLA))
 suppressMessages(library(splines2))
+suppressMessages(library(nlme))
+suppressMessages(library(lme4))
 inla.setOption(pardiso.license = "~/sys/licenses/pardiso.lic")
 set.seed(1)
 
@@ -66,6 +68,7 @@ list(
   )),
   targets::tar_target(model_df, get_model_df(r_wallinga, covariates)),
   targets::tar_target(fit, get_fit_oscar(model_df)),
+  targets::tar_target(fit_nlme, get_fit_oscar_nlme(model_df)),
   targets::tar_target(cov, get_cov(fit)),
   targets::tar_target(b, get_b(fit)),
   targets::tar_target(plot_r, get_plot_r(r_wallinga), format = "file"),
@@ -78,5 +81,7 @@ list(
   targets::tar_target(plot_r_p50, get_plot_r_p50(r), format = "file"),
   targets::tar_target(plot_r_p90, get_plot_r_p90(r), format = "file"),
   targets::tar_target(plot_r_ts, get_plot_r_ts(r, comunas), format = "file"),
-  targets::tar_target(plot_r_bp, get_plot_r_bp(r, comunas), format = "file")
+  targets::tar_target(plot_r_bp, get_plot_r_bp(r, comunas), format = "file"),
+  targets::tar_target(plot_fit_qqnorm, get_plot_fit_qqnorm(fit_nlme), format = "file"),
+  targets::tar_target(plot_fit_acf, get_plot_fit_acf(fit_nlme), format = "file")
 )

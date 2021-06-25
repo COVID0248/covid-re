@@ -1157,6 +1157,32 @@ get_fit_oscar <- function(model_df) {
   )
 }
 
+get_fit_oscar_nlme <- function(model_df) {
+  covariates <- c(
+    "capital_regional",
+    "capital_provincial",
+    "pob_20_a_64",
+    "inmigrantes",
+    "aeropuerto",
+    "puerto",
+    "idse",
+    "indice_ruralidad",
+    paste0("paso_lag", 1:5),
+    paste0("vacunados1_lag", 1:5),
+    paste0("vacunados2_lag", 1:5),
+    paste0("pp_vecinos_cuarentena_lag", 1:5),
+    paste0("pcr_lag", 1:5)
+  )
+  oscar_selector_nlme(
+    data     = na.omit(model_df),
+    yvar0    = "r",
+    xvar0    = covariates,
+    random   = "~ 1 | codigo_region / codigo_comuna",
+    max_lag  = 5
+  )
+}
+
+
 get_fit_ivan <- function(model_df) {
   covariates <- c(
     "capital_regional",
@@ -1350,4 +1376,20 @@ get_plot_r_bp <- function(r, comunas) {
   
   ggsave("images/plot_r_bp.png", plot, width = 7, height = 7)
   return("images/plot_r_bp.png")
+}
+
+get_plot_fit_qqnorm <- function(fit_nlme) {
+  png("images/plot_fit_qqnorm.png")
+  qqnorm(resid(fit_nlme))
+  qqline(resid(fit_nlme))
+  dev.off()
+  return("images/plot_fit_qqnorm.png")
+}
+
+
+get_plot_fit_acf <- function(fit_nlme) {
+  png("images/plot_fit_acf.png")
+  plot(nlme::ACF(fit_nlme))
+  dev.off()
+  return("images/plot_fit_acf.png")
 }
