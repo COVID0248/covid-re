@@ -1182,6 +1182,84 @@ get_fit_oscar_nlme <- function(model_df) {
   )
 }
 
+get_fit_oscar_nlme_ar1 <- function(model_df) {
+  covariates <- c(
+    "capital_regional",
+    "capital_provincial",
+    "pob_20_a_64",
+    "inmigrantes",
+    "aeropuerto",
+    "puerto",
+    "idse",
+    "indice_ruralidad",
+    paste0("paso_lag", 1:5),
+    paste0("vacunados1_lag", 1:5),
+    paste0("vacunados2_lag", 1:5),
+    paste0("pp_vecinos_cuarentena_lag", 1:5),
+    paste0("pcr_lag", 1:5)
+  )
+  oscar_selector_nlme(
+    data        = na.omit(model_df),
+    yvar0       = "r",
+    xvar0       = covariates,
+    random      = "~ 1 | codigo_region / codigo_comuna",
+    correlation = corAR1(form =  ~ codigo_semana | codigo_region / codigo_comuna),
+    max_lag     = 5
+  )
+}
+
+get_fit_oscar_nlme_ma1 <- function(model_df) {
+  covariates <- c(
+    "capital_regional",
+    "capital_provincial",
+    "pob_20_a_64",
+    "inmigrantes",
+    "aeropuerto",
+    "puerto",
+    "idse",
+    "indice_ruralidad",
+    paste0("paso_lag", 1:5),
+    paste0("vacunados1_lag", 1:5),
+    paste0("vacunados2_lag", 1:5),
+    paste0("pp_vecinos_cuarentena_lag", 1:5),
+    paste0("pcr_lag", 1:5)
+  )
+  oscar_selector_nlme(
+    data        = na.omit(model_df),
+    yvar0       = "r",
+    xvar0       = covariates,
+    random      = "~ 1 | codigo_region / codigo_comuna",
+    correlation = corARMA(p = 0, q = 1),
+    max_lag     = 5
+  )
+}
+
+
+get_fit_oscar_nlme_arma <- function(model_df) {
+  covariates <- c(
+    "capital_regional",
+    "capital_provincial",
+    "pob_20_a_64",
+    "inmigrantes",
+    "aeropuerto",
+    "puerto",
+    "idse",
+    "indice_ruralidad",
+    paste0("paso_lag", 1:5),
+    paste0("vacunados1_lag", 1:5),
+    paste0("vacunados2_lag", 1:5),
+    paste0("pp_vecinos_cuarentena_lag", 1:5),
+    paste0("pcr_lag", 1:5)
+  )
+  oscar_selector_nlme(
+    data        = na.omit(model_df),
+    yvar0       = "r",
+    xvar0       = covariates,
+    random      = "~ codigo_semana | codigo_region / codigo_comuna",
+    correlation = corARMA(p = 2, q = 2),
+    max_lag     = 5
+  )
+}
 
 get_fit_ivan <- function(model_df) {
   covariates <- c(
@@ -1386,6 +1464,12 @@ get_plot_fit_qqnorm <- function(fit_nlme) {
   return("images/plot_fit_qqnorm.png")
 }
 
+get_plot_fit_acf <- function(fit_nlme) {
+  png("images/plot_fit_acf.png")
+  plot(nlme::ACF(fit_nlme))
+  dev.off()
+  return("images/plot_fit_acf.png")
+}
 
 get_plot_fit_acf <- function(fit_nlme) {
   png("images/plot_fit_acf.png")

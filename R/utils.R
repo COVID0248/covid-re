@@ -86,7 +86,7 @@ oscar_selector <- function(data, yvar0, xvar0, random, max_lag = 5) {
   fit1 <- lme4::lmer(as.formula(final_fmla), data = data)
 }
 
-oscar_selector_nlme <- function(data, yvar0, xvar0, random, max_lag = 5) {
+oscar_selector_nlme <- function(data, yvar0, xvar0, random, max_lag = 5, correlation = NULL) {
   lagged_vars_false <- xvar0[!grepl("(lag[1-9])$", xvar0)]
   lagged_vars_true1 <- xvar0[grepl("(lag1)$", xvar0)]
   n_lagged_vars <- length(lagged_vars_true1)
@@ -94,7 +94,7 @@ oscar_selector_nlme <- function(data, yvar0, xvar0, random, max_lag = 5) {
   # Fit Base model
   x <- paste0(c(lagged_vars_false, lagged_vars_true1), collapse = " + ")
   fmla0 <- paste0(yvar0, " ~ ", x)
-  fit0 <- nlme::lme(as.formula(fmla0), data = data, random = as.formula(random))
+  fit0 <- nlme::lme(as.formula(fmla0), data = data, as.formula(random), correlation)
   aic0 <- AIC(fit0)
   
   # Fit explore larger models
@@ -106,7 +106,7 @@ oscar_selector_nlme <- function(data, yvar0, xvar0, random, max_lag = 5) {
       substring(x1[k], nchar(x1[k])) <- as.character(lag)
       x <- paste0(c(x0, x1), collapse = " + ")
       fmlak <- paste0(yvar0, " ~ ", x)
-      fitk <- nlme::lme(as.formula(fmlak), data = data, random = as.formula(random))
+      fitk <- nlme::lme(as.formula(fmlak), data, as.formula(random), correlation)
       aick <- AIC(fitk)
       if (aick < aic0) {
         final_fmla <- fmlak
@@ -116,7 +116,7 @@ oscar_selector_nlme <- function(data, yvar0, xvar0, random, max_lag = 5) {
   }
   
   # Fit best model
-  fit1 <- nlme::lme(as.formula(final_fmla), data = data, random = as.formula(random))
+  fit1 <- nlme::lme(as.formula(final_fmla), data, as.formula(random), correlation)
 }
 
 long_boxplot <- function(data, varname) {
