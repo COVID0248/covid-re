@@ -5,6 +5,7 @@ suppressMessages(library(rstan))
 suppressMessages(library(sf))
 suppressMessages(library(sn))
 suppressMessages(library(INLA))
+suppressMessages(library(splines))
 suppressMessages(library(splines2))
 suppressMessages(library(nlme))
 suppressMessages(library(lme4))
@@ -72,8 +73,8 @@ list(
   targets::tar_target(fit_nlme_ar1, get_fit_oscar_nlme_ar1(model_df)),
   targets::tar_target(fit_nlme_ma1, get_fit_oscar_nlme_ma1(model_df)),
   targets::tar_target(fit_nlme_arma, get_fit_oscar_nlme_arma(model_df)),
-  targets::tar_target(cov, get_cov(fit)),
-  targets::tar_target(b, get_b(fit)),
+  targets::tar_target(cov, get_cov(fit_nlme)),
+  targets::tar_target(b, get_b(fit_nlme)),
   targets::tar_target(plot_r, get_plot_r(r_wallinga), format = "file"),
   targets::tar_target(plot_pp_vecinos_cuarentena, get_plot_pp_vecinos_cuarentena(pp_vecinos_cuarentena), format = "file"),
   targets::tar_target(plot_pcr, get_plot_pcr(pcr), format = "file"),

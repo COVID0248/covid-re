@@ -56,10 +56,11 @@ mystepwise <- function(yvar0, xvar0, preserve, max_pval, random, data) {
 oscar_selector <- function(data, yvar0, xvar0, random, max_lag = 5) {
   lagged_vars_false <- xvar0[!grepl("(lag[1-9])$", xvar0)]
   lagged_vars_true1 <- xvar0[grepl("(lag1)$", xvar0)]
+  bsvars <- xvar0[grepl("^(bs)", xvar0)]
   n_lagged_vars <- length(lagged_vars_true1)
 
-  # Fit Base model
-  x <- paste0(c(lagged_vars_false, lagged_vars_true1), collapse = " + ")
+  # Fit Base model 
+  x <- paste0(c(lagged_vars_false, lagged_vars_true1, bsvars), collapse = " + ")
   fmla0 <- paste0(yvar0, " ~ ", x, " + ", random)
   fit0 <- lme4::lmer(as.formula(fmla0), data = data)
   aic0 <- extractAIC(fit0)[2]
@@ -89,10 +90,11 @@ oscar_selector <- function(data, yvar0, xvar0, random, max_lag = 5) {
 oscar_selector_nlme <- function(data, yvar0, xvar0, random, max_lag = 5, correlation = NULL) {
   lagged_vars_false <- xvar0[!grepl("(lag[1-9])$", xvar0)]
   lagged_vars_true1 <- xvar0[grepl("(lag1)$", xvar0)]
+  bsvars <- xvar0[grepl("^(bs)", xvar0)]
   n_lagged_vars <- length(lagged_vars_true1)
   
   # Fit Base model
-  x <- paste0(c(lagged_vars_false, lagged_vars_true1), collapse = " + ")
+  x <- paste0(c(lagged_vars_false, lagged_vars_true1, bsvars), collapse = " + ")
   fmla0 <- paste0(yvar0, " ~ ", x)
   fit0 <- nlme::lme(as.formula(fmla0), data = data, as.formula(random), correlation)
   aic0 <- AIC(fit0)

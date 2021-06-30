@@ -1130,6 +1130,11 @@ get_model_df <- function(r_wallinga, covariates) {
       indice_ruralidad,
       dplyr::contains("lag")
     )
+  
+  knots <- quantile(model_df$codigo_semana, p = (1:9) / 10)
+  bsx <- splines2::bSpline(model_df$codigo_semana, knots = knots)
+  colnames(bsx) <- paste0("bs", 1:ncol(bsx))
+  cbind(model_df, bsx)
 }
 
 get_fit_oscar <- function(model_df) {
@@ -1146,7 +1151,8 @@ get_fit_oscar <- function(model_df) {
     paste0("vacunados1_lag", 1:5),
     paste0("vacunados2_lag", 1:5),
     paste0("pp_vecinos_cuarentena_lag", 1:5),
-    paste0("pcr_lag", 1:5)
+    paste0("pcr_lag", 1:5),
+    paste0("bs", 1:12)
   )
   oscar_selector(
     data     = na.omit(model_df),
@@ -1171,7 +1177,8 @@ get_fit_oscar_nlme <- function(model_df) {
     paste0("vacunados1_lag", 1:5),
     paste0("vacunados2_lag", 1:5),
     paste0("pp_vecinos_cuarentena_lag", 1:5),
-    paste0("pcr_lag", 1:5)
+    paste0("pcr_lag", 1:5),
+    paste0("bs", 1:12)
   )
   oscar_selector_nlme(
     data     = na.omit(model_df),
@@ -1196,7 +1203,8 @@ get_fit_oscar_nlme_ar1 <- function(model_df) {
     paste0("vacunados1_lag", 1:5),
     paste0("vacunados2_lag", 1:5),
     paste0("pp_vecinos_cuarentena_lag", 1:5),
-    paste0("pcr_lag", 1:5)
+    paste0("pcr_lag", 1:5),
+    paste0("bs", 1:12)
   )
   oscar_selector_nlme(
     data        = na.omit(model_df),
@@ -1222,7 +1230,8 @@ get_fit_oscar_nlme_ma1 <- function(model_df) {
     paste0("vacunados1_lag", 1:5),
     paste0("vacunados2_lag", 1:5),
     paste0("pp_vecinos_cuarentena_lag", 1:5),
-    paste0("pcr_lag", 1:5)
+    paste0("pcr_lag", 1:5),
+    paste0("bs", 1:12)
   )
   oscar_selector_nlme(
     data        = na.omit(model_df),
@@ -1249,7 +1258,8 @@ get_fit_oscar_nlme_arma <- function(model_df) {
     paste0("vacunados1_lag", 1:5),
     paste0("vacunados2_lag", 1:5),
     paste0("pp_vecinos_cuarentena_lag", 1:5),
-    paste0("pcr_lag", 1:5)
+    paste0("pcr_lag", 1:5),
+    paste0("bs", 1:12)
   )
   oscar_selector_nlme(
     data        = na.omit(model_df),
@@ -1275,7 +1285,8 @@ get_fit_ivan <- function(model_df) {
     paste0("vacunados1_lag", 1:5),
     paste0("vacunados2_lag", 1:5),
     paste0("pp_vecinos_cuarentena_lag", 1:5),
-    paste0("pcr_lag", 1:5)
+    paste0("pcr_lag", 1:5),
+    paste0("bs", 1:12)
   )
   mystepwise(
     yvar0    = "r",
@@ -1462,13 +1473,6 @@ get_plot_fit_qqnorm <- function(fit_nlme) {
   qqline(resid(fit_nlme))
   dev.off()
   return("images/plot_fit_qqnorm.png")
-}
-
-get_plot_fit_acf <- function(fit_nlme) {
-  png("images/plot_fit_acf.png")
-  plot(nlme::ACF(fit_nlme))
-  dev.off()
-  return("images/plot_fit_acf.png")
 }
 
 get_plot_fit_acf <- function(fit_nlme) {
