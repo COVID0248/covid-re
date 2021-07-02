@@ -1467,6 +1467,21 @@ get_plot_r_bp <- function(r, comunas) {
   return("images/plot_r_bp.png")
 }
 
+get_plot_r_hist <- function(model_df) {
+  T <- max(model_df$codigo_semana)
+  plot <- 
+    model_df %>%
+    dplyr::filter(codigo_semana %in% (T - 4 * (0:3))) %>%
+    ggplot2::ggplot(aes(x = r)) +
+    ggplot2::geom_histogram() +
+    ggplot2::facet_grid(cols = ggplot2::vars(codigo_semana), scales = "free") +
+    ggplot2::theme_classic()# +
+   # ggplot2::labs(x = "epidemiological week", y = "effective R")
+  # 
+  ggsave("images/plot_r_hist.png", plot, width = 7, height = 7)
+  return("images/plot_r_hist.png")
+}
+
 get_plot_fit_qqnorm <- function(fit_nlme) {
   png("images/plot_fit_qqnorm.png")
   qqnorm(resid(fit_nlme))
