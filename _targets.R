@@ -70,6 +70,7 @@ list(
   targets::tar_target(model_df, get_model_df(r_wallinga, covariates)),
   targets::tar_target(fit, get_fit_oscar(model_df)),
   targets::tar_target(fit_nlme, get_fit_oscar_nlme(model_df)),
+  targets::tar_target(fit_nlme_boxcox, get_fit_oscar_nlme_boxcox(model_df)),
   targets::tar_target(fit_nlme_ar1, get_fit_oscar_nlme_ar1(model_df)),
   targets::tar_target(fit_nlme_ma1, get_fit_oscar_nlme_ma1(model_df)),
   targets::tar_target(fit_nlme_arma, get_fit_oscar_nlme_arma(model_df)),
@@ -89,5 +90,7 @@ list(
   targets::tar_target(plot_r_hist, get_plot_r_hist(model_df), format = "file"),
   targets::tar_target(plot_fit_qqnorm, get_plot_fit_qqnorm(fit_nlme), format = "file"),
   targets::tar_target(plot_fit_acf, get_plot_fit_acf(fit_nlme), format = "file"),
-  targets::tar_target(plot_fit_yh, get_plot_fit_yh(fit_nlme, model_df), format = "file")
+  targets::tar_target(plot_fit_yh, get_plot_fit_yh(fit_nlme, model_df), format = "file"),
+  targets::tar_target(plot_fit_boxcox_qqnorm, get_plot_fit_boxcox_qqnorm(fit_nlme_boxcox), format = "file"),
+  targets::tar_target(plot_fit_boxcox_acf, get_plot_fit_boxcox_acf(fit_nlme_boxcox), format = "file")
 )

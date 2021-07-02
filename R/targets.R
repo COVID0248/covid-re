@@ -1190,6 +1190,48 @@ get_fit_oscar_nlme <- function(model_df) {
   )
 }
 
+get_fit_oscar_nlme_boxcox <- function(model_df) {
+  covariates <- c(
+    "capital_regional",
+    "capital_provincial",
+    "pob_20_a_64",
+    "inmigrantes",
+    "aeropuerto",
+    "puerto",
+    "idse",
+    "indice_ruralidad",
+    paste0("paso_lag", 1:5),
+    paste0("vacunados1_lag", 1:5),
+    paste0("vacunados2_lag", 1:5),
+    paste0("pp_vecinos_cuarentena_lag", 1:5),
+    paste0("pcr_lag", 1:5),
+    paste0("bs", 1:12)
+  )
+  lambdas <- seq(from = 0.00, to = 3, by = 0.1)
+  best_lambda <- 0.0
+  best_aic <- Inf
+  for (lambda in lambdas) {
+    if (lambda == 0) {
+      model_df$rboxcox <- log(model_df$r)
+    } else {
+      model_df$rboxcox <- (model_df$r^lambda - 1) / lambda
+    }
+    fit <- 
+      oscar_selector_nlme(
+        data     = na.omit(model_df),
+        yvar0    = "rboxcox",
+        xvar0    = covariates,
+        random   = "~ 1 | codigo_region / codigo_comuna",
+        max_lag  = 5
+      )
+    if (AIC(fit) < best_aic) {
+      best_lambda <- lambda
+      best_aic <- AIC(fit)    
+    }
+  }
+  return(list(best_lambda = best_lambda, fit = fit))
+}
+
 get_fit_oscar_nlme_ar1 <- function(model_df) {
   covariates <- c(
     "capital_regional",
@@ -1517,4 +1559,19 @@ get_plot_fit_yh <- function(fit_nlme, model_df) {
     ggplot2::facet_grid(cols = ggplot2::vars(comuna))
   ggsave("images/plot_fit_yh.png", plot, width = 7, height = 7)
   return("images/plot_fit_yh.png")
+}
+
+get_plot_fit_boxcox_qqnorm <- function(fit_nlme_boxcox) {
+  png("images/plot_fit_boxcox_qqnorm.png")
+  qqnorm(resid(fit_nlme_boxcox$fit))
+  qqline(resid(fit_nlme_boxcox$fit))
+  dev.off()
+  return("images/plot_fit_boxcox_qqnorm.png")
+}
+
+get_plot_fit_boxcox_acf <- function(fit_nlme_boxcox) {
+  png("images/plot_fit_boxcox_acf.png")
+  plot(nlme::ACF(fit_nlme_boxcox$fit))
+  dev.off()
+  return("images/plot_fit_boxcox_acf.png")
 }
