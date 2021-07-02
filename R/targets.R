@@ -1117,6 +1117,7 @@ get_model_df <- function(r_wallinga, covariates) {
     dplyr::select(
       r,
       casos_nuevos,
+      comuna,
       codigo_semana,
       codigo_comuna,
       codigo_region,
@@ -1242,7 +1243,6 @@ get_fit_oscar_nlme_ma1 <- function(model_df) {
     max_lag     = 5
   )
 }
-
 
 get_fit_oscar_nlme_arma <- function(model_df) {
   covariates <- c(
@@ -1480,4 +1480,26 @@ get_plot_fit_acf <- function(fit_nlme) {
   plot(nlme::ACF(fit_nlme))
   dev.off()
   return("images/plot_fit_acf.png")
+}
+
+get_plot_fit_yh <- function(fit_nlme, model_df) {
+  plot <-
+    model_df %>%
+    na.omit() %>%
+    dplyr::mutate(
+      fitted = fitted(fit_nlme),
+      comuna = comuna %>%
+        dplyr::recode(
+          Concepcion = "Concepción",
+          Valparaiso = "Valparaíso"
+        )
+    ) %>%
+    dplyr::filter(capital_regional == 1, codigo_region %in% c(5, 6, 8, 13)) %>%
+    dplyr::select(actual = r, codigo_semana, comuna, fitted) %>%
+    tidyr::pivot_longer(c(actual, fitted), names_to = "series") %>%
+    ggplot2::ggplot(aes(x = codigo_semana, y = value, color = series)) +
+    ggplot2::geom_line() +
+    ggplot2::facet_grid(cols = ggplot2::vars(comuna))
+  ggsave("images/plot_fit_yh.png", plot, width = 7, height = 7)
+  return("images/plot_fit_yh.png")
 }

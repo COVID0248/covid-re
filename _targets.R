@@ -87,5 +87,6 @@ list(
   targets::tar_target(plot_r_ts, get_plot_r_ts(r, comunas), format = "file"),
   targets::tar_target(plot_r_bp, get_plot_r_bp(r, comunas), format = "file"),
   targets::tar_target(plot_fit_qqnorm, get_plot_fit_qqnorm(fit_nlme), format = "file"),
-  targets::tar_target(plot_fit_acf, get_plot_fit_acf(fit_nlme), format = "file")
+  targets::tar_target(plot_fit_acf, get_plot_fit_acf(fit_nlme), format = "file"),
+  targets::tar_target(plot_fit_yh, get_plot_fit_yh(fit_nlme, model_df), format = "file")
 )
