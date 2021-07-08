@@ -75,8 +75,10 @@ list(
   targets::tar_target(fit_nlme_ar1, get_fit_oscar_nlme_ar1(model_df)),
   targets::tar_target(fit_nlme_ma1, get_fit_oscar_nlme_ma1(model_df)),
   targets::tar_target(fit_nlme_arma, get_fit_oscar_nlme_arma(model_df)),
+  targets::tar_target(fit_gamma, get_fit_oscar_gamma(model_df)),
   targets::tar_target(cov, get_cov(fit_nlme)),
   targets::tar_target(b, get_b(fit_nlme)),
+  targets::tar_target(b_gamma, get_b(fit_gamma)),
   targets::tar_target(plot_r, get_plot_r(r_wallinga), format = "file"),
   targets::tar_target(plot_pp_vecinos_cuarentena, get_plot_pp_vecinos_cuarentena(pp_vecinos_cuarentena), format = "file"),
   targets::tar_target(plot_pcr, get_plot_pcr(pcr), format = "file"),
@@ -95,5 +97,7 @@ list(
   targets::tar_target(plot_fit_boxcox_qqnorm, get_plot_fit_boxcox_qqnorm(fit_nlme_boxcox), format = "file"),
   targets::tar_target(plot_fit_boxcox_acf, get_plot_fit_boxcox_acf(fit_nlme_boxcox), format = "file"),
   targets::tar_target(plot_fit_boxcox_ar1_qqnorm, get_plot_fit_boxcox_ar1_qqnorm(fit_nlme_boxcox_ar1), format = "file"),
-  targets::tar_target(plot_fit_boxcox_ar1_acf, get_plot_fit_boxcox_ar1_acf(fit_nlme_boxcox_ar1))
+  targets::tar_target(plot_fit_boxcox_ar1_acf, get_plot_fit_boxcox_ar1_acf(fit_nlme_boxcox_ar1)),
+  targets::tar_target(tbl_b, tbl_b(fit, "data/b.csv"), format = "file"),
+  targets::tar_target(tbl_b_gamma, tbl_b(fit_gamma, "data/b_gamma.csv"), format = "file")
 )

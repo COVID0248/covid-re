@@ -1659,3 +1659,9 @@ get_plot_fit_boxcox_ar1_acf <- function(fit_nlme_boxcox_ar1) {
   dev.off()
   return("images/plot_fit_boxcox_ar1_acf.png")
 }
+
+tbl_b <- function(fit, name) {
+  tbl <- broom.mixed::tidy(fit, effects = "fixed")
+  write.csv(tbl, name)
+  return(name)
+}
