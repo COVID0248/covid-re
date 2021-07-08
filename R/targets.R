@@ -1164,6 +1164,32 @@ get_fit_oscar <- function(model_df) {
   )
 }
 
+get_fit_oscar_gamma <- function(model_df) {
+  covariates <- c(
+    "capital_regional",
+    "capital_provincial",
+    "pob_20_a_64",
+    "inmigrantes",
+    "aeropuerto",
+    "puerto",
+    "idse",
+    "indice_ruralidad",
+    paste0("paso_lag", 1:5),
+    paste0("vacunados1_lag", 1:5),
+    paste0("vacunados2_lag", 1:5),
+    paste0("pp_vecinos_cuarentena_lag", 1:5),
+    paste0("pcr_lag", 1:5),
+    paste0("bs", 1:12)
+  )
+  oscar_selector_gamma(
+    data     = na.omit(model_df),
+    yvar0    = "r",
+    xvar0    = covariates,
+    random   = "(1 | codigo_region / codigo_comuna)",
+    max_lag  = 5
+  )
+}
+
 get_fit_oscar_nlme <- function(model_df) {
   covariates <- c(
     "capital_regional",
@@ -1222,6 +1248,49 @@ get_fit_oscar_nlme_boxcox <- function(model_df) {
         yvar0    = "rboxcox",
         xvar0    = covariates,
         random   = "~ 1 | codigo_region / codigo_comuna",
+        max_lag  = 5
+      )
+    if (AIC(fit) < best_aic) {
+      best_lambda <- lambda
+      best_aic <- AIC(fit)    
+    }
+  }
+  return(list(best_lambda = best_lambda, fit = fit))
+}
+
+get_fit_oscar_nlme_boxcox_ar1 <- function(model_df) {
+  covariates <- c(
+    "capital_regional",
+    "capital_provincial",
+    "pob_20_a_64",
+    "inmigrantes",
+    "aeropuerto",
+    "puerto",
+    "idse",
+    "indice_ruralidad",
+    paste0("paso_lag", 1:5),
+    paste0("vacunados1_lag", 1:5),
+    paste0("vacunados2_lag", 1:5),
+    paste0("pp_vecinos_cuarentena_lag", 1:5),
+    paste0("pcr_lag", 1:5),
+    paste0("bs", 1:12)
+  )
+  lambdas <- seq(from = 0.00, to = 3, by = 0.1)
+  best_lambda <- 0.0
+  best_aic <- Inf
+  for (lambda in lambdas) {
+    if (lambda == 0) {
+      model_df$rboxcox <- log(model_df$r)
+    } else {
+      model_df$rboxcox <- (model_df$r^lambda - 1) / lambda
+    }
+    fit <- 
+      oscar_selector_nlme(
+        data     = na.omit(model_df),
+        yvar0    = "rboxcox",
+        xvar0    = covariates,
+        random   = "~ 1 | codigo_region / codigo_comuna",
+        correlation = corAR1(form =  ~ codigo_semana | codigo_region / codigo_comuna),
         max_lag  = 5
       )
     if (AIC(fit) < best_aic) {
@@ -1574,4 +1643,19 @@ get_plot_fit_boxcox_acf <- function(fit_nlme_boxcox) {
   plot(nlme::ACF(fit_nlme_boxcox$fit))
   dev.off()
   return("images/plot_fit_boxcox_acf.png")
+}
+
+get_plot_fit_boxcox_ar1_qqnorm <- function(fit_nlme_boxcox_ar1) {
+  png("images/plot_fit_boxcox_ar1_qqnorm.png")
+  qqnorm(resid(fit_nlme_boxcox_ar1$fit))
+  qqline(resid(fit_nlme_boxcox_ar1$fit))
+  dev.off()
+  return("images/plot_fit_boxcox_ar1_qqnorm.png")
+}
+
+get_plot_fit_boxcox_ar1_acf <- function(fit_nlme_boxcox_ar1) {
+  png("images/plot_fit_boxcox_ar1_acf.png")
+  plot(nlme::ACF(fit_nlme_boxcox_ar1$fit))
+  dev.off()
+  return("images/plot_fit_boxcox_ar1_acf.png")
 }
