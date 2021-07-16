@@ -1665,3 +1665,31 @@ tbl_b <- function(fit, name) {
   write.csv(tbl, name)
   return(name)
 }
+
+get_predict_gamma <- function(model_df, fit_gamma) {
+  df_median <- 
+    model_df %>%
+    dplyr::summarise(across(
+      where(is.numeric), 
+      ~ quantile(.x, 0.5, na.rm = TRUE))
+    )
+
+  df_median_list <- list()
+  for (i in 1:4) {
+    df_median_list[[i]] <- 
+      df_median %>% 
+      dplyr::mutate(paso_lag1 = factor(i, levels = c(1, 2, 3, 4)))
+  }
+  
+  result <- data.frame(paso_lag1 = numeric(0), prediction = numeric(0))
+  for (i in 1:4) {
+    newdata <- df_median_list[[i]]
+    result <- 
+      result %>%
+      dplyr::add_row(
+        paso_lag1 = i,
+        prediction = predict(fit_gamma, newdata, type = "response", re.form = NA)
+      )
+  }
+  result
+}

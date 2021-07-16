@@ -79,6 +79,7 @@ list(
   targets::tar_target(cov, get_cov(fit_nlme)),
   targets::tar_target(b, get_b(fit_nlme)),
   targets::tar_target(b_gamma, get_b(fit_gamma)),
+  targets::tar_target(predict_gamma, get_predict_gamma(model_df, fit_gamma)),
   targets::tar_target(plot_r, get_plot_r(r_wallinga), format = "file"),
   targets::tar_target(plot_pp_vecinos_cuarentena, get_plot_pp_vecinos_cuarentena(pp_vecinos_cuarentena), format = "file"),
   targets::tar_target(plot_pcr, get_plot_pcr(pcr), format = "file"),
