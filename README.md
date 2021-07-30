@@ -26,8 +26,8 @@ Todos los targets están en `_targets.R`, mientras que las funciones llamadas po
   3. `plot_r_p90`. Percentil 90 del R efectivo, según comuna y método.
   4. `plot_r_bp`. Boxplot del R efectivo, según método y semana epidemiológica.
   5. `plot_r_ts`. R efectivo para 4 comunas seleccionadas, según método y semana epidemiológica.
-  
-Así, por ejemplo, el usuario puede replicar la figura 1 ejecutando
+
+y de la misma manera, el target al Cuadro 1 es `b_gamma`. Así, por ejemplo, el usuario puede replicar la figura 1 ejecutando
 
 ```r
 targets::tar_make("r_p10")
