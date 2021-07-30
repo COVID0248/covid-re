@@ -21,11 +21,11 @@ targets::tar_read("r")
 
 Todos los targets están en `_targets.R`, mientras que las funciones llamadas por estos están en `R/targets.R`. Los targets asociados a las 5 figuras del estudio son:
 
-  1. `plot_r_p10`.
-  2. `plot_r_p50`.
-  3. `plot_r_p90`.
-  4. `plot_r_ts`.
-  5. `plot_r_bp`.
+  1. `plot_r_p10`. Percentil 10 del R efectivo, según comuna y método.
+  2. `plot_r_p50`. Percentil 50 del R efectivo, según comuna y método.
+  3. `plot_r_p90`. Percentil 90 del R efectivo, según comuna y método.
+  4. `plot_r_bp`. Boxplot del R efectivo, según método y semana epidemiológica.
+  5. `plot_r_ts`. R efectivo para 4 comunas seleccionadas, según método y semana epidemiológica.
   
 Así, por ejemplo, el usuario puede replicar la figura 1 ejecutando
 
@@ -33,3 +33,9 @@ Así, por ejemplo, el usuario puede replicar la figura 1 ejecutando
 targets::tar_make("r_p10")
 targets::tar_read("r_p10")
 ```
+
+Quien desee entender las dependencias entre los objetos intermedios creados durante las reconstrucción del proyecto (digamos, para entender la lógica del proyecto), puede visualizar la red dependencias ejecutando:
+
+```
+targets::tar_visnetwork()
+``` 
