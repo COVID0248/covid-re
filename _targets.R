@@ -9,6 +9,7 @@ suppressMessages(library(splines))
 suppressMessages(library(splines2))
 suppressMessages(library(nlme))
 suppressMessages(library(lme4))
+suppressMessages(library(visNetwork))
 inla.setOption(pardiso.license = "~/sys/licenses/pardiso.lic")
 set.seed(1)
 
