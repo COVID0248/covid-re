@@ -42,6 +42,6 @@ targets::tar_read("r")
 
 Quien desee entender las dependencias entre los objetos intermedios creados durante las reconstrucción del proyecto (digamos, para entender la lógica del proyecto), puede visualizar la red dependencias ejecutando:
 
-```
+```r
 targets::tar_visnetwork()
 ``` 
