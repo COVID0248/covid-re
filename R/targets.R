@@ -1453,7 +1453,35 @@ get_plot_casos <- function(casos) {
   return("images/plot_casos.png")  
 }
 
-get_plot_r_p10 <- function(r) {
+get_plot_r_p10_en <- function(r) {
+  df <-
+    r %>%
+    dplyr::group_by(codigo_comuna, method) %>%
+    dplyr::summarise(r = quantile(r, 0.10, na.rm = TRUE), .groups = NULL)
+  
+  mapa <-
+    sf::st_read("data/mapa/mapa.shp", quiet = TRUE) %>%
+    dplyr::filter(
+      !(NOM_PROVIN %in% c("ANTÁRTICA CHILENA", "ISLA DE PASCUA")),
+      !(NOM_COMUNA %in% c("JUAN FERNANDEZ"))
+    ) %>%
+    sf::st_transform('+proj=longlat +datum=WGS84') %>%
+    dplyr::mutate(codigo_comuna = CUT) %>%
+    dplyr::inner_join(df)
+  
+  plot <- 
+    ggplot2::ggplot(data = mapa) +
+    ggplot2::geom_sf(ggplot2::aes(fill = r), size = 0.05) +
+    ggplot2::facet_grid(cols = ggplot2::vars(method)) +
+    ggplot2::theme_void() +
+    ggplot2::scale_color_grey() +
+    ggplot2::labs(fill = "Effective R")
+  
+  ggsave("images/plot_r_p10_en.png", plot, width = 7, height = 4)
+  return("images/plot_r_p10_en.png")
+}
+
+get_plot_r_p10_es <- function(r) {
   df <-
     r %>%
     dplyr::group_by(codigo_comuna, method) %>%
@@ -1477,11 +1505,39 @@ get_plot_r_p10 <- function(r) {
     ggplot2::scale_color_grey() +
     ggplot2::labs(fill = "R efectivo")
   
-  ggsave("images/plot_r_p10.png", plot, width = 7, height = 4)
-  return("images/plot_r_p10.png")
+  ggsave("images/plot_r_p10_es.png", plot, width = 7, height = 4)
+  return("images/plot_r_p10_es.png")
 }
 
-get_plot_r_p50 <- function(r) {
+get_plot_r_p50_en <- function(r) {
+  df <-
+    r %>%
+    dplyr::group_by(codigo_comuna, method) %>%
+    dplyr::summarise(r = quantile(r, 0.5, na.rm = TRUE), .groups = NULL)
+  
+  mapa <-
+    sf::st_read("data/mapa/mapa.shp", quiet = TRUE) %>%
+    dplyr::filter(
+      !(NOM_PROVIN %in% c("ANTÁRTICA CHILENA", "ISLA DE PASCUA")),
+      !(NOM_COMUNA %in% c("JUAN FERNANDEZ"))
+    ) %>%
+    sf::st_transform('+proj=longlat +datum=WGS84') %>%
+    dplyr::mutate(codigo_comuna = CUT) %>%
+    dplyr::inner_join(df)
+  
+  plot <- 
+    ggplot2::ggplot(data = mapa) +
+    ggplot2::geom_sf(ggplot2::aes(fill = r), size = 0.05) +
+    ggplot2::facet_grid(cols = ggplot2::vars(method)) +
+    ggplot2::theme_void() +
+    ggplot2::scale_color_grey() +
+    ggplot2::labs(fill = "Effective R")
+  
+  ggsave("images/plot_r_p50_en.png", plot, width = 7, height = 4)
+  return("images/plot_r_p50_en.png")
+}
+
+get_plot_r_p50_es <- function(r) {
   df <-
     r %>%
     dplyr::group_by(codigo_comuna, method) %>%
@@ -1505,11 +1561,39 @@ get_plot_r_p50 <- function(r) {
     ggplot2::scale_color_grey() +
     ggplot2::labs(fill = "R efectivo")
   
-  ggsave("images/plot_r_p50.png", plot, width = 7, height = 4)
-  return("images/plot_r_p50.png")
+  ggsave("images/plot_r_p50_es.png", plot, width = 7, height = 4)
+  return("images/plot_r_p50_es.png")
 }
 
-get_plot_r_p90 <- function(r) {
+get_plot_r_p90_en <- function(r) {
+  df <-
+    r %>%
+    dplyr::group_by(codigo_comuna, method) %>%
+    dplyr::summarise(r = quantile(r, 0.90, na.rm = TRUE), .groups = NULL)
+  
+  mapa <-
+    sf::st_read("data/mapa/mapa.shp", quiet = TRUE) %>%
+    dplyr::filter(
+      !(NOM_PROVIN %in% c("ANTÁRTICA CHILENA", "ISLA DE PASCUA")),
+      !(NOM_COMUNA %in% c("JUAN FERNANDEZ"))
+    ) %>%
+    sf::st_transform('+proj=longlat +datum=WGS84') %>%
+    dplyr::mutate(codigo_comuna = CUT) %>%
+    dplyr::inner_join(df)
+  
+  plot <- 
+    ggplot2::ggplot(data = mapa) +
+    ggplot2::geom_sf(ggplot2::aes(fill = r), size = 0.05) +
+    ggplot2::facet_grid(cols = ggplot2::vars(method)) +
+    ggplot2::theme_void() +
+    ggplot2::scale_color_grey() +
+    ggplot2::labs(fill = "Effective R")
+  
+  ggsave("images/plot_r_p90_en.png", plot, width = 7, height = 4)
+  return("images/plot_r_p90_en.png")
+}
+
+get_plot_r_p90_es <- function(r) {
   df <-
     r %>%
     dplyr::group_by(codigo_comuna, method) %>%
@@ -1533,11 +1617,11 @@ get_plot_r_p90 <- function(r) {
     ggplot2::scale_color_grey() +
     ggplot2::labs(fill = "R efectivo")
 
-  ggsave("images/plot_r_p90.png", plot, width = 7, height = 4)
-  return("images/plot_r_p90.png")
+  ggsave("images/plot_r_p90_es.png", plot, width = 7, height = 4)
+  return("images/plot_r_p90_es.png")
 }
 
-get_plot_r_ts <- function(r, comunas) {
+get_plot_r_ts_en <- function(r, comunas) {
   regiones <-
     targets::tar_read(comunas) %>%
     dplyr::filter(capital_regional == 1) %>%
@@ -1561,11 +1645,40 @@ get_plot_r_ts <- function(r, comunas) {
     ggplot2::theme_classic() +
     ggplot2::labs(x = "epidemiological week", y = "effective R")
   
-  ggsave("images/plot_r_ts.png", plot, width = 7, height = 7)
-  return("images/plot_r_ts.png")
+  ggsave("images/plot_r_ts_en.png", plot, width = 7, height = 7)
+  return("images/plot_r_ts_en.png")
 }
 
-get_plot_r_bp <- function(r, comunas) {
+get_plot_r_ts_es <- function(r, comunas) {
+  regiones <-
+    targets::tar_read(comunas) %>%
+    dplyr::filter(capital_regional == 1) %>%
+    dplyr::select(codigo_comuna, codigo_region, comuna) %>%
+    dplyr::mutate(
+      comuna = comuna %>%
+        dplyr::recode(
+          Concepcion = "Concepción",
+          Valparaiso = "Valparaíso"
+        )
+    )
+  
+  plot <- 
+    targets::tar_read(r) %>%
+    dplyr::filter(codigo_region %in% c(5, 6, 8, 13)) %>%
+    dplyr::select(!codigo_region) %>%
+    dplyr::inner_join(regiones) %>%
+    ggplot2::ggplot(aes(y = r, x = codigo_semana)) +
+    ggplot2::facet_grid(rows = ggplot2::vars(method), scales = "free_y") +
+    ggplot2::geom_line(aes(colour = comuna)) +
+    ggplot2::theme_classic() +
+    ggplot2::labs(x = "semana epidemiológica", y = "R efectivo")
+  
+  ggsave("images/plot_r_ts_es.png", plot, width = 7, height = 7)
+  return("images/plot_r_ts_es.png")
+}
+
+
+get_plot_r_bp_en <- function(r, comunas) {
   plot <- 
     r %>%
     ggplot2::ggplot(aes(y = r, group = codigo_semana)) +
@@ -1574,11 +1687,24 @@ get_plot_r_bp <- function(r, comunas) {
     ggplot2::theme_classic() +
     ggplot2::labs(x = "epidemiological week", y = "effective R")
   
-  ggsave("images/plot_r_bp.png", plot, width = 7, height = 7)
-  return("images/plot_r_bp.png")
+  ggsave("images/plot_r_bp_en.png", plot, width = 7, height = 7)
+  return("images/plot_r_bp_en.png")
 }
 
-get_plot_r_hist <- function(model_df) {
+get_plot_r_bp_es <- function(r, comunas) {
+  plot <- 
+    r %>%
+    ggplot2::ggplot(aes(y = r, group = codigo_semana)) +
+    ggplot2::geom_boxplot(outlier.size = 0.1) +
+    ggplot2::facet_grid(rows = ggplot2::vars(method), scales = "free_y") +
+    ggplot2::theme_classic() +
+    ggplot2::labs(x = "semana epidemiológica", y = "R efectivo")
+  
+  ggsave("images/plot_r_bp_es.png", plot, width = 7, height = 7)
+  return("images/plot_r_bp_es.png")
+}
+
+get_plot_r_hist_en <- function(model_df) {
   T <- max(model_df$codigo_semana)
   plot <- 
     model_df %>%
@@ -1589,8 +1715,23 @@ get_plot_r_hist <- function(model_df) {
     ggplot2::theme_classic()# +
    # ggplot2::labs(x = "epidemiological week", y = "effective R")
   # 
-  ggsave("images/plot_r_hist.png", plot, width = 7, height = 7)
-  return("images/plot_r_hist.png")
+  ggsave("images/plot_r_hist_en.png", plot, width = 7, height = 7)
+  return("images/plot_r_hist_en.png")
+}
+
+get_plot_r_hist_es <- function(model_df) {
+  T <- max(model_df$codigo_semana)
+  plot <- 
+    model_df %>%
+    dplyr::filter(codigo_semana %in% (T - 4 * (0:3))) %>%
+    ggplot2::ggplot(aes(x = r)) +
+    ggplot2::geom_histogram() +
+    ggplot2::facet_grid(cols = ggplot2::vars(codigo_semana), scales = "free") +
+    ggplot2::theme_classic()# +
+  # ggplot2::labs(x = "semana epidemiológica", y = "R efectivo")
+  # 
+  ggsave("images/plot_r_hist_es.png", plot, width = 7, height = 7)
+  return("images/plot_r_hist_es.png")
 }
 
 get_plot_fit_qqnorm <- function(fit_nlme) {
