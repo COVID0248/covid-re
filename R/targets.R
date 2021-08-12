@@ -294,6 +294,37 @@ get_vacunados1 <- function() {
     dplyr::as_tibble()
 }
 
+#' % de personas con esquema de vacunación completo, según comuna y sepi
+#' 
+#' @format Un tibble con 7,245 filas y 3 columnas
+#' \describe {
+#' \item{codigo_comuna}{comuna (código cut)}
+#' \item{codigo_semana}{semana (epidemiologica)}
+#' \item{porcentaje_vacunados_esquema_completo}{% de personas con esquema de vacunación completo}
+#' }
+#' @note No incluye la antártica (12202)
+#' @source https://github.com/MinCiencia/Datos-COVID19 - Producto 80
+get_pp_vacunados_completo <- function(conn) {
+  data <- 
+    conn %>%
+    dplyr::tbl("vw_porcentaje_vacunados_sc") %>%
+    dplyr::filter(codigo_comuna != 12202) %>%
+    dplyr::collect() %>%
+    dplyr::mutate(
+      semana_epidemiologica = as.numeric(semana_epidemiologica),
+      sepi_week     = semana_epidemiologica %% 100,
+      sepi_year     = floor(semana_epidemiologica / 100),
+      codigo_semana = sepi_week + max(sepi_week) * (sepi_year == 2021)
+    ) %>%
+    dplyr::select(
+      codigo_comuna, 
+      codigo_semana, 
+      pp_vacunados_completo = porcentaje_vacunados_esquema_completo
+    ) %>%
+    tibble::as_tibble()
+  data
+}
+
 #' Personas con 2da vacuna, según comuna y semana epidemiológica
 #' 
 #' @format Un tibble con 7,245 filas y 3 columnas
@@ -1079,25 +1110,23 @@ get_covariates <- function(casos, ...) {
     dplyr::ungroup() %>%
     dplyr::filter(codigo_comuna != 12202) %>%
     tidyr::replace_na(list(
-      pcr        = 0,
-      vacunados1 = 0,
-      vacunados2 = 0
+      pcr = 0,
+      pp_vacunados_completo = 0
     )) %>%
     dplyr::mutate(
       paso = dplyr::if_else(is.na(paso), 4L - 3L * cuarentena, paso),
       idse = idse / 1000,
       densidad_1em4 = densidad_poblacional * 1e-4,
       across(
-        .cols = c(pob_20_a_64, inmigrantes, vacunados1, vacunados2),
+        .cols = c(pob_20_a_64, inmigrantes),
         .fns  = ~ .x / poblacion
       ),
-      paso =  as.factor(paso)
+      paso = as.factor(paso)
     ) %>%
     dplyr::arrange(codigo_comuna, codigo_semana) %>%
     dplyr::group_by(codigo_comuna) %>%
     dplyr::mutate(
-      !!!lags(vacunados1, 5),
-      !!!lags(vacunados2, 5),
+      !!!lags(pp_vacunados_completo, 5),
       !!!lags(paso, 5),
       !!!lags(pcr, 5),
       !!!lags(im_interno, 8),
@@ -1149,8 +1178,7 @@ get_fit_oscar <- function(model_df) {
     "idse",
     "indice_ruralidad",
     paste0("paso_lag", 1:5),
-    paste0("vacunados1_lag", 1:5),
-    paste0("vacunados2_lag", 1:5),
+    paste0("pp_vacunados_completo_lag", 1:5),
     paste0("pp_vecinos_cuarentena_lag", 1:5),
     paste0("pcr_lag", 1:5),
     paste0("bs", 1:12)
@@ -1175,8 +1203,7 @@ get_fit_oscar_gamma <- function(model_df) {
     "idse",
     "indice_ruralidad",
     paste0("paso_lag", 1:5),
-    paste0("vacunados1_lag", 1:5),
-    paste0("vacunados2_lag", 1:5),
+    paste0("pp_vacunados_completo_lag", 1:5),
     paste0("pp_vecinos_cuarentena_lag", 1:5),
     paste0("pcr_lag", 1:5),
     paste0("bs", 1:12)
@@ -1201,8 +1228,7 @@ get_fit_oscar_nlme <- function(model_df) {
     "idse",
     "indice_ruralidad",
     paste0("paso_lag", 1:5),
-    paste0("vacunados1_lag", 1:5),
-    paste0("vacunados2_lag", 1:5),
+    paste0("pp_vacunados_completo_lag", 1:5),
     paste0("pp_vecinos_cuarentena_lag", 1:5),
     paste0("pcr_lag", 1:5),
     paste0("bs", 1:12)
@@ -1227,8 +1253,7 @@ get_fit_oscar_nlme_boxcox <- function(model_df) {
     "idse",
     "indice_ruralidad",
     paste0("paso_lag", 1:5),
-    paste0("vacunados1_lag", 1:5),
-    paste0("vacunados2_lag", 1:5),
+    paste0("pp_vacunados_completo_lag", 1:5),
     paste0("pp_vecinos_cuarentena_lag", 1:5),
     paste0("pcr_lag", 1:5),
     paste0("bs", 1:12)
@@ -1269,8 +1294,7 @@ get_fit_oscar_nlme_boxcox_ar1 <- function(model_df) {
     "idse",
     "indice_ruralidad",
     paste0("paso_lag", 1:5),
-    paste0("vacunados1_lag", 1:5),
-    paste0("vacunados2_lag", 1:5),
+    paste0("pp_vacunados_completo_lag", 1:5),
     paste0("pp_vecinos_cuarentena_lag", 1:5),
     paste0("pcr_lag", 1:5),
     paste0("bs", 1:12)
@@ -1312,8 +1336,7 @@ get_fit_oscar_nlme_ar1 <- function(model_df) {
     "idse",
     "indice_ruralidad",
     paste0("paso_lag", 1:5),
-    paste0("vacunados1_lag", 1:5),
-    paste0("vacunados2_lag", 1:5),
+    paste0("pp_vacunados_completo_lag", 1:5),
     paste0("pp_vecinos_cuarentena_lag", 1:5),
     paste0("pcr_lag", 1:5),
     paste0("bs", 1:12)
@@ -1339,8 +1362,7 @@ get_fit_oscar_nlme_ma1 <- function(model_df) {
     "idse",
     "indice_ruralidad",
     paste0("paso_lag", 1:5),
-    paste0("vacunados1_lag", 1:5),
-    paste0("vacunados2_lag", 1:5),
+    paste0("pp_vacunados_completo_lag", 1:5),
     paste0("pp_vecinos_cuarentena_lag", 1:5),
     paste0("pcr_lag", 1:5),
     paste0("bs", 1:12)
@@ -1366,8 +1388,7 @@ get_fit_oscar_nlme_arma <- function(model_df) {
     "idse",
     "indice_ruralidad",
     paste0("paso_lag", 1:5),
-    paste0("vacunados1_lag", 1:5),
-    paste0("vacunados2_lag", 1:5),
+    paste0("pp_vacunados_completo_lag", 1:5),
     paste0("pp_vecinos_cuarentena_lag", 1:5),
     paste0("pcr_lag", 1:5),
     paste0("bs", 1:12)
@@ -1393,8 +1414,7 @@ get_fit_ivan <- function(model_df) {
     "idse",
     "indice_ruralidad",
     paste0("paso_lag", 1:5),
-    paste0("vacunados1_lag", 1:5),
-    paste0("vacunados2_lag", 1:5),
+    paste0("pp_vacunados_completo_lag", 1:5),
     paste0("pp_vecinos_cuarentena_lag", 1:5),
     paste0("pcr_lag", 1:5),
     paste0("bs", 1:12)
@@ -1435,17 +1455,17 @@ get_plot_pcr <- function(pcr) {
   return("images/plot_pcr.png")  
 }
 
-get_plot_vacunados1 <- function(vacunados1) {
-  plot <- long_boxplot(vacunados1, "vacunados1")
-  ggsave("images/plot_vacunados1.png", plot, width = 7, height = 7)
-  return("images/plot_vacunados1.png")  
-}
-
-get_plot_vacunados2 <- function(vacunados2) {
-  plot <- long_boxplot(vacunados2, "vacunados2")
-  ggsave("images/plot_vacunados2.png", plot, width = 7, height = 7)
-  return("images/plot_vacunados2.png")  
-}
+# get_plot_vacunados1 <- function(vacunados1) {
+#   plot <- long_boxplot(vacunados1, "vacunados1")
+#   ggsave("images/plot_vacunados1.png", plot, width = 7, height = 7)
+#   return("images/plot_vacunados1.png")  
+# }
+# 
+# get_plot_vacunados2 <- function(vacunados2) {
+#   plot <- long_boxplot(vacunados2, "vacunados2")
+#   ggsave("images/plot_vacunados2.png", plot, width = 7, height = 7)
+#   return("images/plot_vacunados2.png")  
+# }
 
 get_plot_casos <- function(casos) {
   plot <- long_boxplot(casos, "casos_nuevos")
@@ -1801,7 +1821,7 @@ get_plot_fit_boxcox_ar1_acf <- function(fit_nlme_boxcox_ar1) {
   return("images/plot_fit_boxcox_ar1_acf.png")
 }
 
-tbl_b <- function(fit, name) {
+get_tbl_b <- function(fit, name) {
   tbl <- broom.mixed::tidy(fit, effects = "fixed")
   write.csv(tbl, name)
   return(name)

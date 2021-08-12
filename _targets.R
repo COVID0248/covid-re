@@ -31,6 +31,7 @@ list(
   targets::tar_target(pcr, get_pcr(comunas)), # debiese cubrir todas las semanas (añadir ceros está bien)
   targets::tar_target(vacunados1, get_vacunados1()), # debiese cubrir todas las semanas (añadir ceros está bien)
   targets::tar_target(vacunados2, get_vacunados2()), # debiese cubrir todas las semanas (añadir ceros está bien)
+  targets::tar_target(pp_vacunados_completo, get_pp_vacunados_completo(conn)),
   targets::tar_target(im_interno, get_im_interno()),
   targets::tar_target(im_externo, get_im_externo()),
   targets::tar_target(mp10, get_mp10()),
@@ -60,8 +61,7 @@ list(
     comunas,
     pasos,
     pcr,
-    vacunados1,
-    vacunados2,
+    pp_vacunados_completo,
     vacaciones,
     cuarentenas,
     im_interno,
@@ -84,8 +84,8 @@ list(
   targets::tar_target(plot_r, get_plot_r(r_wallinga), format = "file"),
   targets::tar_target(plot_pp_vecinos_cuarentena, get_plot_pp_vecinos_cuarentena(pp_vecinos_cuarentena), format = "file"),
   targets::tar_target(plot_pcr, get_plot_pcr(pcr), format = "file"),
-  targets::tar_target(plot_vacunados1, get_plot_vacunados1(vacunados1), format = "file"),
-  targets::tar_target(plot_vacunados2, get_plot_vacunados2(vacunados2), format = "file"),
+  # targets::tar_target(plot_vacunados1, get_plot_vacunados1(vacunados1), format = "file"),
+  # targets::tar_target(plot_vacunados2, get_plot_vacunados2(vacunados2), format = "file"),
   targets::tar_target(plot_casos, get_plot_casos(casos), format = "file"),
   targets::tar_target(plot_r_p10_en, get_plot_r_p10_en(r), format = "file"),
   targets::tar_target(plot_r_p10_es, get_plot_r_p10_es(r), format = "file"),
@@ -106,6 +106,6 @@ list(
   targets::tar_target(plot_fit_boxcox_acf, get_plot_fit_boxcox_acf(fit_nlme_boxcox), format = "file"),
   targets::tar_target(plot_fit_boxcox_ar1_qqnorm, get_plot_fit_boxcox_ar1_qqnorm(fit_nlme_boxcox_ar1), format = "file"),
   targets::tar_target(plot_fit_boxcox_ar1_acf, get_plot_fit_boxcox_ar1_acf(fit_nlme_boxcox_ar1)),
-  targets::tar_target(tbl_b, tbl_b(fit, "data/b.csv"), format = "file"),
-  targets::tar_target(tbl_b_gamma, tbl_b(fit_gamma, "data/b_gamma.csv"), format = "file")
+  targets::tar_target(tbl_b, get_tbl_b(fit, "data/b.csv"), format = "file"),
+  targets::tar_target(tbl_b_gamma, get_tbl_b(fit_gamma, "data/b_gamma.csv"), format = "file")
 )
