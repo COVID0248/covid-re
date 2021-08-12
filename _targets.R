@@ -10,6 +10,7 @@ suppressMessages(library(splines2))
 suppressMessages(library(nlme))
 suppressMessages(library(lme4))
 suppressMessages(library(visNetwork))
+suppressMessages(library(xtable))
 inla.setOption(pardiso.license = "~/sys/licenses/pardiso.lic")
 set.seed(1)
 
@@ -107,5 +108,6 @@ list(
   targets::tar_target(plot_fit_boxcox_ar1_qqnorm, get_plot_fit_boxcox_ar1_qqnorm(fit_nlme_boxcox_ar1), format = "file"),
   targets::tar_target(plot_fit_boxcox_ar1_acf, get_plot_fit_boxcox_ar1_acf(fit_nlme_boxcox_ar1)),
   targets::tar_target(tbl_b, get_tbl_b(fit, "data/b.csv"), format = "file"),
-  targets::tar_target(tbl_b_gamma, get_tbl_b(fit_gamma, "data/b_gamma.csv"), format = "file")
+  targets::tar_target(tbl_b_gamma, get_tbl_b(fit_gamma, "data/b_gamma.csv"), format = "file"),
+  targets::tar_target(tbl_b_gamma_tex, get_tbl_b_tex(fit_gamma, "data/b_gamma.tex"), format = "file")
 )

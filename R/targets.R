@@ -1827,6 +1827,12 @@ get_tbl_b <- function(fit, name) {
   return(name)
 }
 
+get_tbl_b_tex <- function(fit, name) {
+  tbl <- broom.mixed::tidy(fit, effects = "fixed")
+  print(xtable(tbl), file = name)
+  return(name)
+}
+
 get_predict_gamma <- function(model_df, fit_gamma) {
   df_median <- 
     model_df %>%
