@@ -1711,13 +1711,11 @@ get_plot_r_vac_ts <- function(model_df, lang) {
       names_to = "variable",
       values_to = "value"
     ) %>%
-    ggplot2::ggplot(aes(y = value, x = codigo_semana, color = variable)) +
+    ggplot2::ggplot(aes(y = value, x = codigo_semana, group = variable, color = paso == 1)) +
     ggplot2::facet_grid(rows = ggplot2::vars(comuna), scales = "free") +
     ggplot2::geom_line() +
     ggplot2::theme_classic() +
-    ggplot2::labs(x = x_lab, y = "") +
-    scale_color_manual(labels = color_labels, values = color_values) + 
-    theme(legend.position = "top")
+    ggplot2::labs(x = x_lab, y = "")
   ggsave(fname, plot, width = 7, height = 7)
   return(fname)
 }
