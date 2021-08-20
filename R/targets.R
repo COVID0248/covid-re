@@ -1158,6 +1158,8 @@ get_model_df <- function(r_wallinga, covariates) {
       puerto,
       idse,
       indice_ruralidad,
+      pp_vacunados_completo,
+      paso,
       dplyr::contains("lag")
     )
   
@@ -1188,7 +1190,7 @@ get_fit_oscar <- function(model_df) {
     yvar0    = "r",
     xvar0    = covariates,
     random   = "(1 | codigo_region / codigo_comuna)",
-    max_lag  = 5
+    max_lag  = 3
   )
 }
 
@@ -1213,7 +1215,7 @@ get_fit_oscar_gamma <- function(model_df) {
     yvar0    = "r",
     xvar0    = covariates,
     random   = "(1 | codigo_region / codigo_comuna)",
-    max_lag  = 5
+    max_lag  = 3
   )
 }
 
@@ -1238,7 +1240,7 @@ get_fit_oscar_nlme <- function(model_df) {
     yvar0    = "r",
     xvar0    = covariates,
     random   = "~ 1 | codigo_region / codigo_comuna",
-    max_lag  = 5
+    max_lag  = 3
   )
 }
 
@@ -1667,6 +1669,57 @@ get_plot_r_ts_en <- function(r, comunas) {
   
   ggsave("images/plot_r_ts_en.png", plot, width = 7, height = 7)
   return("images/plot_r_ts_en.png")
+}
+
+get_plot_r_vac_ts <- function(model_df, lang) {
+  # regiones <-
+  #   comunas %>%
+  #   dplyr::filter(capital_regional == 1) %>%
+  #   dplyr::select(codigo_comuna, codigo_region, comuna) %>%
+  #   dplyr::mutate(
+  #     comuna = comuna %>%
+  #       dplyr::recode(
+  #         Concepcion = "Concepción",
+  #         Valparaiso = "Valparaíso"
+  #       )
+  #   )
+  
+  if (lang == "en") {
+    x_lab <- "epidemiological week"
+    color_labels <- c("% of population with a complete vaccination schedule", "effective-R")
+    color_values <- c("darkblue", "darkred")
+    fname <- "images/plot_r_vacunados_completo_ts_en.png"
+  } 
+  if (lang == "es") {
+    x_lab <- "semana epidemiológica"
+    color_labels <- c("% de la población con esquema de vacunación completo", "R-efectivo")
+    color_values <- c("darkblue", "darkred")
+    fname <- "images/plot_r_vacunados_completo_ts_es.png"
+  }
+  
+  plot <- 
+    model_df %>%
+    dplyr::filter(capital_regional == 1) %>%
+    dplyr::filter(codigo_region %in% c(5, 6, 8, 13)) %>%
+    dplyr::mutate(
+      comuna = comuna %>%
+        dplyr::recode(Concepcion = "Concepción", Valparaiso = "Valparaíso")
+    ) %>%
+    dplyr::select(comuna, codigo_semana, r, pp_vacunados_completo, paso) %>%
+    tidyr::pivot_longer(
+      c(r, pp_vacunados_completo),
+      names_to = "variable",
+      values_to = "value"
+    ) %>%
+    ggplot2::ggplot(aes(y = value, x = codigo_semana, color = variable)) +
+    ggplot2::facet_grid(rows = ggplot2::vars(comuna), scales = "free") +
+    ggplot2::geom_line() +
+    ggplot2::theme_classic() +
+    ggplot2::labs(x = x_lab, y = "") +
+    scale_color_manual(labels = color_labels, values = color_values) + 
+    theme(legend.position = "top")
+  ggsave(fname, plot, width = 7, height = 7)
+  return(fname)
 }
 
 get_plot_r_ts_es <- function(r, comunas) {
