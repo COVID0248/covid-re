@@ -1121,6 +1121,10 @@ get_covariates <- function(casos, ...) {
         .cols = c(pob_20_a_64, inmigrantes),
         .fns  = ~ .x / poblacion
       ),
+      pp_vacunados_completo =
+        pp_vacunados_completo %>%
+        cut(breaks = c(-1:5) / 5) %>%
+        dplyr::recode_factor("(-0.2,0]" = "{0}"),
       paso = as.factor(paso)
     ) %>%
     dplyr::arrange(codigo_comuna, codigo_semana) %>%
