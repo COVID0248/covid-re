@@ -1223,6 +1223,30 @@ get_fit_oscar_gamma <- function(model_df) {
   )
 }
 
+get_fit_oscar_gamma_no_vaccine <- function(model_df) {
+  covariates <- c(
+    "capital_regional",
+    "capital_provincial",
+    "pob_20_a_64",
+    "inmigrantes",
+    "aeropuerto",
+    "puerto",
+    "idse",
+    "indice_ruralidad",
+    paste0("paso_lag", 1:5),
+    paste0("pp_vecinos_cuarentena_lag", 1:5),
+    paste0("pcr_lag", 1:5),
+    paste0("bs", 1:12)
+  )
+  oscar_selector_gamma(
+    data     = na.omit(model_df),
+    yvar0    = "r",
+    xvar0    = covariates,
+    random   = "(1 | codigo_region / codigo_comuna)",
+    max_lag  = 3
+  )
+}
+
 get_fit_oscar_nlme <- function(model_df) {
   covariates <- c(
     "capital_regional",
