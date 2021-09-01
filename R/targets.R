@@ -1677,7 +1677,7 @@ get_plot_r_ts_en <- function(r, comunas) {
     dplyr::filter(capital_regional == 1) %>%
     dplyr::select(codigo_comuna, codigo_region, comuna) %>%
     dplyr::mutate(
-      comuna = comuna %>%
+      comunne = comuna %>%
         dplyr::recode(
           Concepcion = "Concepción",
           Valparaiso = "Valparaíso"
@@ -1691,7 +1691,7 @@ get_plot_r_ts_en <- function(r, comunas) {
     dplyr::inner_join(regiones) %>%
     ggplot2::ggplot(aes(y = r, x = codigo_semana)) +
     ggplot2::facet_grid(rows = ggplot2::vars(method), scales = "free_y") +
-    ggplot2::geom_line(aes(colour = comuna)) +
+    ggplot2::geom_line(aes(colour = comunne)) +
     ggplot2::theme_classic() +
     ggplot2::labs(x = "epidemiological week", y = "effective R")
   
