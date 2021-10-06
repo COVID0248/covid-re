@@ -114,5 +114,12 @@ list(
   targets::tar_target(tbl_b_gamma, get_tbl_b(fit_gamma, "data/b_gamma.csv"), format = "file"),
   targets::tar_target(tbl_b_gamma_tex, get_tbl_b_tex(fit_gamma, "data/b_gamma.tex"), format = "file"),
   targets::tar_target(tbl_b_gamma_no_vaccine, get_tbl_b(fit_gamma_no_vaccine, "data/b_gamma_no_vaccine.csv"), format = "file"),
-  targets::tar_target(tbl_b_gamma_no_vaccine_tex, get_tbl_b_tex(fit_gamma_no_vaccine, "data/b_gamma_no_vaccine.tex"), format = "file")
+  targets::tar_target(tbl_b_gamma_no_vaccine_tex, get_tbl_b_tex(fit_gamma_no_vaccine, "data/b_gamma_no_vaccine.tex"), format = "file"),
+  #AWS
+  targets::tar_target(covariates_aws, get_covariates_aws(
+    inmigrantes, pob_20_64, pp_vecinos_cuarentena, pcr, pp_vacunados_completo)
+  ),
+  targets::tar_target(model_df_aws, get_model_df(r_wallinga, covariates_aws)),
+  targets::tar_target(fit_gamma_no_vaccine_aws, get_fit_oscar_gamma_no_vaccine(model_df_aws)),
+  targets::tar_target(tbl_b_gamma_no_vaccine_aws, get_tbl_b(fit_gamma_no_vaccine_aws, "data/b_gamma_no_vaccine_aws.csv"), format = "file")
 )

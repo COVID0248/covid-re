@@ -1149,7 +1149,6 @@ get_model_df <- function(r_wallinga, covariates) {
     dplyr::select(!dplyr::starts_with("im_")) %>%
     dplyr::select(
       r,
-      casos_nuevos,
       comuna,
       codigo_semana,
       codigo_comuna,
@@ -1938,4 +1937,33 @@ get_predict_gamma <- function(model_df, fit_gamma) {
       )
   }
   result
+}
+
+get_covariates_aws <- function(...) {
+  df <- 
+    list(readRDS("data/model_df_aws.rds"), ...) %>%
+    purrr::reduce(dplyr::left_join) %>%
+    dplyr::ungroup() %>%
+    dplyr::filter(codigo_comuna != 12202) %>%
+    tidyr::replace_na(list(
+      pcr = 0,
+      idse = idse / 1000
+    )) %>%
+    dplyr::mutate(
+      densidad_1em4 = densidad_poblacional * 1e-4,
+      across(
+        .cols = c(pob_20_a_64, inmigrantes),
+        .fns  = ~ .x / poblacion
+      )
+    ) %>%
+    dplyr::arrange(codigo_comuna, codigo_semana) %>%
+    dplyr::group_by(codigo_comuna) %>%
+    dplyr::mutate(
+      paso = as.factor(paso),
+      !!!lags(paso, 5),
+      !!!lags(pcr, 5),
+      !!!lags(pp_vecinos_cuarentena, 5)
+    ) %>%
+    dplyr::ungroup() #%>%
+    # dplyr::rename(idse = )
 }
