@@ -88,7 +88,7 @@ list(
   targets::tar_target(plot_r, get_plot_r(r_wallinga), format = "file"),
   targets::tar_target(plot_pp_vecinos_cuarentena, get_plot_pp_vecinos_cuarentena(pp_vecinos_cuarentena), format = "file"),
   targets::tar_target(plot_pcr, get_plot_pcr(pcr), format = "file"),
-  targets::tar_target(plot_casos, get_plot_casos(casos), format = "file"),
+  targets::tar_target(plot_casos0_en, get_plot_casos0_en(casos0), format = "file"),
   targets::tar_target(plot_r_p10_en, get_plot_r_p10_en(r), format = "file"),
   targets::tar_target(plot_r_p10_es, get_plot_r_p10_es(r), format = "file"),
   targets::tar_target(plot_r_p50_en, get_plot_r_p50_en(r), format = "file"),

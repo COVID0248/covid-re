@@ -161,7 +161,8 @@ long_boxplot <- function(data, varname) {
     dplyr::mutate(codigo_semana = as.factor(codigo_semana)) %>%
     ggplot2::ggplot(aes(codigo_semana, .data[[varname]])) +
     ggplot2::geom_boxplot() +
-    ggplot2::theme_classic()
+    ggplot2::theme_classic() +
+    scale_x_discrete(breaks = seq(4, max(data[["codigo_semana"]]), by = 4))
 }
 
 

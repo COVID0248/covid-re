@@ -1496,10 +1496,13 @@ get_plot_pcr <- function(pcr) {
 #   return("images/plot_vacunados2.png")  
 # }
 
-get_plot_casos <- function(casos) {
-  plot <- long_boxplot(casos, "casos_nuevos")
-  ggsave("images/plot_casos.png", plot, width = 7, height = 7)
-  return("images/plot_casos.png")  
+get_plot_casos0_en <- function(casos) {
+  plot <- 
+    long_boxplot(casos, "casos_nuevos") +
+    ggplot2::labs(x = "epidemiological week", y = "new cases")
+  
+  ggsave("images/plot_casos0_en.png", plot, width = 7, height = 7)
+  return("images/plot_casos0_en.png")  
 }
 
 get_plot_r_p10_en <- function(r) {
