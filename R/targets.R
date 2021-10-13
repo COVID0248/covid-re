@@ -1779,8 +1779,10 @@ get_plot_r_ts_es <- function(r, comunas) {
 get_plot_r_bp_en <- function(r, comunas) {
   plot <- 
     r %>%
-    ggplot2::ggplot(aes(y = r, group = codigo_semana)) +
+    dplyr::mutate(codigo_semana = as.factor(codigo_semana)) %>%
+    ggplot2::ggplot(aes(y = r, x = codigo_semana)) +
     ggplot2::geom_boxplot(outlier.size = 0.1) +
+    scale_x_discrete(breaks = seq(4, max(r$codigo_semana), by = 4)) +
     ggplot2::facet_grid(rows = ggplot2::vars(method), scales = "free_y") +
     ggplot2::theme_classic() +
     ggplot2::labs(x = "epidemiological week", y = "effective R")
@@ -1792,8 +1794,10 @@ get_plot_r_bp_en <- function(r, comunas) {
 get_plot_r_bp_es <- function(r, comunas) {
   plot <- 
     r %>%
+    dplyr::mutate(codigo_semana = as.factor(codigo_semana)) %>%
     ggplot2::ggplot(aes(y = r, group = codigo_semana)) +
     ggplot2::geom_boxplot(outlier.size = 0.1) +
+    scale_x_discrete(breaks = seq(4, max(r$codigo_semana), by = 4)) +
     ggplot2::facet_grid(rows = ggplot2::vars(method), scales = "free_y") +
     ggplot2::theme_classic() +
     ggplot2::labs(x = "semana epidemiológica", y = "R efectivo")
