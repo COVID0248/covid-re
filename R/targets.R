@@ -1974,3 +1974,155 @@ get_covariates_aws <- function(...) {
     dplyr::ungroup() #%>%
     # dplyr::rename(idse = )
 }
+
+
+get_r_martinez_ines <- function(casos0, vecinos, comunas) {
+  r_eff_inla <- function(regions) {
+    # Retrieve the areas in the selected regions
+    communes <- 
+      targets::tar_read("comunas") %>%
+      dplyr::filter(codigo_region %in% regions) %>%
+      dplyr::filter(!(codigo_comuna %in% c(9207, 11202, 11402, 12201))) %>%
+      dplyr::pull(codigo_comuna)
+    
+    # Retrieve the links
+    edges <- 
+      targets::tar_read("vecinos") %>%
+      dplyr::rename(edge1 = codigo_comuna, edge2 = codigo_vecino) %>%
+      dplyr::filter(
+        edge1 %in% communes, 
+        edge2 %in% communes
+      )
+    
+    # Retrieve the cases
+    cases <- 
+      targets::tar_read("casos0") %>%
+      dplyr::filter(
+        codigo_comuna %in% c(edges$edge1, edges$edge2),
+        codigo_region %in% regions
+      ) %>%
+      dplyr::rename(y = casos_nuevos)
+    
+    # Compute a standardized index for areas
+    id_area <- 
+      cases %>% 
+      dplyr::mutate(id_area = dplyr::dense_rank(codigo_comuna)) %>%
+      dplyr::distinct(codigo_comuna, id_area)
+    
+    # Compute a standardized index for times
+    id_time <- 
+      cases %>% 
+      dplyr::mutate(id_time = dplyr::dense_rank(codigo_semana)) %>%
+      dplyr::distinct(codigo_semana, id_time)
+    
+    # Add standardized ids to edges
+    edges <- 
+      edges %>%
+      dplyr::inner_join(id_area, by = c("edge1" = "codigo_comuna")) %>%
+      dplyr::inner_join(id_area, by = c("edge2" = "codigo_comuna"))
+    
+    # Compute adjacency matrix
+    adj_mat <- 
+      edges %$%
+      sparseMatrix(i = id_area.x, j = id_area.y) %>%
+      as("dgCMatrix")
+    
+    # Add standardized ids to cases
+    cases <- 
+      cases %>%
+      dplyr::inner_join(id_area) %>%
+      dplyr::inner_join(id_time) %>%
+      dplyr::arrange(id_area, id_time) %>%
+      dplyr::select(id_area, id_time, y, n)
+    
+    # Compute B-splines design matrix for cases$id_time
+    x <- unique(cases$id_time)
+    knots <- seq.int(min(x), max(x), by = 12)
+    bsMat <- splines2::bSpline(cases$id_time, knots = knots, degree = 3)
+    bsMat0 <- splines2::bSpline(x, knots = knots, degree = 3)
+    Nvars <- ncol(bsMat)
+    bsdf <- 
+      as.data.frame(bsMat) %>%
+      magrittr::set_colnames(paste0("x", 1:Nvars))
+    
+    df <- cbind(cases, bsdf)
+    
+    for (i in 1:Nvars) {
+      df[[paste0("id", i)]] <- df$id_area
+    }
+    
+    # Create the matrix used in Leroux's model
+    ICARmatrix <- Diagonal(nrow(adj_mat), apply(adj_mat, 1, sum)) - adj_mat
+    Cmatrix <- Diagonal(nrow(ICARmatrix), 1) -  ICARmatrix
+    
+    fis  <- paste0("f(id", 1:Nvars, ", x", 1:Nvars, ", model = 'generic1', Cmatrix = Cmatrix)", collapse = " + ")
+    fmla <- paste0("y ~ 0 + ", fis)
+    fmla
+    
+    return(list(
+      casos0 = casos0, 
+      vecinos = vecinos, 
+      comunas = comunas, 
+      adj_mat = adj_mat, 
+      ICARmatrix = ICARmatrix,
+      Cmatrix = Cmatrix
+    ))
+    
+    #   fit <- 
+    #     INLA::inla(
+    #       formula = as.formula(fmla),
+    #       data = df,
+    #       family = "poisson",
+    #       E = n, 
+    #       control.predictor = list(compute = TRUE),
+    #       control.compute = list(
+    #         dic = TRUE, 
+    #         waic = TRUE, 
+    #         config = TRUE, 
+    #         openmp.strategy = "pardiso.parallel"
+    #       )
+    #     )
+    #   
+    #   nsims <- 2000L
+    #   R_samples <- 
+    #     inla.posterior.sample(n = nsims, fit, add.names = FALSE, seed = 1L) %>%
+    #     purrr::map(function(x) {
+    #       b <- 
+    #         x[["latent"]] %>%
+    #         tail(Nvars * nrow(id_area)) %>%
+    #         matrix(Nvars, nrow(id_area))
+    #       
+    #       expXb <-
+    #         exp(bsMat0 %*% b)
+    #       
+    #       ws <- 
+    #         sim_weights()
+    #       
+    #       R_samples <- 
+    #         my_slice(expXb, 5, 1) / (
+    #           ws[1] * my_slice(expXb, 5, 2) + 
+    #             ws[2] * my_slice(expXb, 5, 3) + 
+    #             ws[3] * my_slice(expXb, 5, 4) + 
+    #             ws[4] * my_slice(expXb, 5, 5)
+    #         )
+    #     }) %>%
+    #     purrr::reduce(`+`) %>%
+    #     magrittr::divide_by(nsims) %>%
+    #     dplyr::as_tibble() %>%
+    #     dplyr::mutate(id_time = 4 + 1:dplyr::n()) %>%
+    #     tidyr::pivot_longer(
+    #       cols = -id_time, 
+    #       values_to = "r",
+    #       names_prefix = "V", 
+    #       names_to = "id_area",
+    #       names_transform = list(id_area = as.integer)
+    #     ) %>%
+    #     dplyr::inner_join(id_area) %>%
+    #     dplyr::inner_join(id_time) %>%
+    #     dplyr::mutate(id_region = regions, method = "martinez 1") %>%
+    #     dplyr::select(-c(id_area, id_time, id_region))
+  }
+  
+  R_samples <-
+    r_eff_inla(1:16)
+}

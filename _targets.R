@@ -49,6 +49,7 @@ list(
   targets::tar_target(r_rki, get_r_rki(casos)),
   targets::tar_target(r_wallinga, get_r_wallinga(casos)),
   targets::tar_target(r_martinez_besag, get_r_martinez_besag(casos0, vecinos, comunas)),
+  targets::tar_target(r_martinez_ines, get_r_martinez_ines(casos0, vecinos, comunas)),
   targets::tar_target(r, get_r(
     r_systrom, 
     r_cislaghi, 
