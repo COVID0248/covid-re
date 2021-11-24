@@ -496,7 +496,6 @@ get_cuarentenas <- function(comunas, pasos) {
     dplyr::filter(!codigo_comuna %in% c(12202))
 }
 
-
 #' Fracción de la población vecina en cuarentena, 
 #' según comuna y semana epidemiológica
 #' 
@@ -616,6 +615,8 @@ get_r_rki <- function(data) {
 }
 
 get_r_wallinga <- function(data) {
+  cond <- class(data$codigo_semana) == "numeric"
+  coerce_fun <- ifelse(cond, as.numeric, as.Date)
   re_wallinga <-
     unique(data$codigo_comuna) %>%
     purrr::map(
@@ -628,7 +629,7 @@ get_r_wallinga <- function(data) {
         ) %>%
         dplyr::tibble(
           method        = "wallinga",
-          codigo_semana = as.numeric(names(.)),
+          codigo_semana = coerce_fun(names(.)),
           codigo_comuna = .x,
           r            = .
         )
@@ -2125,4 +2126,145 @@ get_r_martinez_ines <- function(casos0, vecinos, comunas) {
   
   R_samples <-
     r_eff_inla(1:16)
+}
+
+get_casos0_nac <- function() {
+  data <-
+    "https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master" %>%
+    paste0("/output/producto5/TotalesNacionales_std.csv") %>%
+    read.csv() %>%
+    dplyr::rename_with(~ gsub("\\.", "_", tolower(.x))) %>%
+    dplyr::filter(dato == "Casos nuevos totales") %>%
+    dplyr::transmute( 
+      codigo_comuna = 0,
+      codigo_semana = as.Date(fecha),
+      casos_nuevos  = total,
+    ) %>%
+    dplyr::arrange(codigo_semana) %>%
+    tibble::as_tibble()
+}
+
+get_casos_nac <- function() {
+  data <-
+    "https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master" %>%
+    paste0("/output/producto5/TotalesNacionales_std.csv") %>%
+    read.csv() %>%
+    dplyr::rename_with(~ gsub("\\.", "_", tolower(.x))) %>%
+    dplyr::filter(dato == "Casos nuevos totales") %>%
+    dplyr::transmute( 
+      codigo_comuna = 0,
+      codigo_semana = as.Date(fecha),
+      casos_nuevos  = pmax(total, 1),
+    ) %>%
+    dplyr::arrange(codigo_semana) %>%
+    tibble::as_tibble()
+}
+
+
+get_r_systrom_model <- function(r_systrom_stanfile) {
+  rstan::stan_model(r_systrom_stanfile)
+}
+
+get_r_systrom <- function(data, r_systrom_model) {
+  data     <- dplyr::arrange(data, codigo_comuna, codigo_semana)
+  semanas  <- unique(data$codigo_semana)
+  comunas  <- unique(data$codigo_comuna)
+  Nsemanas <- length(semanas)
+  comunas %>%
+    purrr::map(
+      ~ list(
+        gamma  = 1,
+        sigma  = 0.1,
+        Ntimes = Nsemanas,
+        I      = data$casos_nuevos[data$codigo_comuna == .x]
+      ) %>%
+        rstan::sampling(r_systrom_model, data = ., seed = 1L, iter = 10000) %>%
+        {tidyr::tibble(
+          method        = "systrom",
+          codigo_comuna = .x,
+          codigo_semana = semanas,
+          r             = rstan::get_posterior_mean(., "R")[, 5]
+        )}
+    ) %>%
+    purrr::reduce(rbind) %>%
+    dplyr::arrange(codigo_comuna, codigo_semana)
+  
+}
+
+get_r_cislaghi_nac <- function(data) {
+  re_cislaghi <-
+    data %>%
+    dplyr::group_by(codigo_comuna) %>%
+    dplyr::mutate(
+      I = roll_mean(casos_nuevos, n = 7, align = "right", fill = NA),
+      r = I / dplyr::lag(I, 5),
+      method = "cislaghi"
+    ) %>%
+    tibble::as_tibble()
+}
+
+get_r_jrc_nac <- function(data) {
+  re_jrc <-
+    data %>%
+    dplyr::group_by(codigo_comuna) %>%
+    dplyr::mutate(
+      r = 7 * log(casos_nuevos / dplyr::lag(casos_nuevos)) + 1,
+      method = "jrc"
+    ) %>%
+    tibble::as_tibble()
+}
+
+get_r_rki_nac <- function(data) {
+  re_rki <-
+    data %>%
+    dplyr::group_by(codigo_comuna) %>%
+    dplyr::mutate(
+      I = roll_mean(casos_nuevos, n = 7, align = "right", fill = NA),
+      r = I / dplyr::lag(I, 7),
+      method = "rki"
+    ) %>%
+    tibble::as_tibble()
+}
+
+get_r_wallinga_nac <- function(data) {
+  cond <- class(data$codigo_semana) == "numeric"
+  coerce_fun <- ifelse(cond, as.numeric, as.Date)
+  re_wallinga <-
+    unique(data$codigo_comuna) %>%
+    purrr::map(
+      ~ data %>%
+        dplyr::filter(codigo_comuna == .x) %$%
+        est_re_exp(
+          setNames(casos_nuevos, codigo_semana),
+          GT_obj = R0::generation.time("gamma", c(6.6 / 7, 1.5 / 7^2)),
+          half_window_width = 3
+        ) %>%
+        dplyr::tibble(
+          method        = "wallinga",
+          codigo_semana = coerce_fun(names(.)),
+          codigo_comuna = .x,
+          r            = .
+        )
+    ) %>%
+    purrr::reduce(rbind) %>%
+    dplyr::inner_join(data, by = c("codigo_comuna", "codigo_semana")) %>%
+    dplyr::mutate(r = unname(r)) %>%
+    dplyr::select(method, codigo_semana, codigo_comuna, r) %>%
+    tibble::as_tibble()
+}
+
+get_r_nac <- function(...) {
+  dplyr::bind_rows(list(...))
+}
+
+get_plot_r_nac_ts_en <- function(r_nac) {
+  plot <-
+    r_nac %>%
+    ggplot2::ggplot(aes(y = r, x = codigo_semana)) +
+    ggplot2::facet_grid(rows = ggplot2::vars(method), scales = "free_y") +
+    ggplot2::geom_line() +
+    ggplot2::theme_classic() +
+    ggplot2::labs(x = "epidemiological week", y = "effective R")
+  ggsave("images/plot_r_ts_nac_en.png", plot, width = 7, height = 7)
+  return("images/plot_r_ts_nac_en.png")
 }

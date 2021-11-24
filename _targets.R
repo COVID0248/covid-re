@@ -11,6 +11,7 @@ suppressMessages(library(nlme))
 suppressMessages(library(lme4))
 suppressMessages(library(visNetwork))
 suppressMessages(library(xtable))
+suppressMessages(library(RcppRoll))
 inla.setOption(pardiso.license = "~/sys/licenses/pardiso.lic")
 set.seed(1)
 
@@ -122,5 +123,15 @@ list(
   ),
   targets::tar_target(model_df_aws, get_model_df(r_wallinga, covariates_aws)),
   targets::tar_target(fit_gamma_no_vaccine_aws, get_fit_oscar_gamma_no_vaccine(model_df_aws)),
-  targets::tar_target(tbl_b_gamma_no_vaccine_aws, get_tbl_b(fit_gamma_no_vaccine_aws, "data/b_gamma_no_vaccine_aws.csv"), format = "file")
+  targets::tar_target(tbl_b_gamma_no_vaccine_aws, get_tbl_b(fit_gamma_no_vaccine_aws, "data/b_gamma_no_vaccine_aws.csv"), format = "file"),
+  # Targets associated to the national effective r estimates
+  targets::tar_target(casos0_nac, get_casos0_nac()),
+  targets::tar_target(casos_nac, get_casos_nac()),
+  targets::tar_target(r_systrom_nac, get_r_systrom(casos_nac, r_systrom_model)),
+  targets::tar_target(r_cislaghi_nac, get_r_cislaghi_nac(casos_nac)),
+  targets::tar_target(r_jrc_nac, get_r_jrc_nac(casos_nac)),
+  targets::tar_target(r_rki_nac, get_r_jrc_nac(casos_nac)),
+  targets::tar_target(r_wallinga_nac, get_r_wallinga(casos_nac)),
+  targets::tar_target(r_nac, get_r_nac(r_systrom_nac, r_cislaghi_nac, r_jrc_nac, r_rki_nac, r_wallinga_nac)),
+  targets::tar_target(plot_r_nac_ts_en, get_plot_r_nac_ts_en(r_nac))
 )
