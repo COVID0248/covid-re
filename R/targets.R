@@ -1,15 +1,39 @@
-# Retorna un conector con AWS
-get_conn <- function() {
-  conn <-
-    noctua::athena() %>%
-    noctua::dbConnect(
-      profile_name   = "covid-anid",
-      s3_staging_dir = "s3://covid-anid/athena-results/",
-      schema_name    = "struct_covid",
-      region_name    = "us-east-1",
-      bigint         = "integer"
-    )
-}
+# # Retorna un conector con AWS
+# get_conn <- function() {
+#   conn <-
+#     noctua::athena() %>%
+#     noctua::dbConnect(
+#       profile_name   = "covid-anid",
+#       s3_staging_dir = "s3://covid-anid/athena-results/",
+#       schema_name    = "struct_covid",
+#       region_name    = "us-east-1",
+#       bigint         = "integer"
+#     )
+# }
+# 
+# get_poblacion_edad <- function(conn, name) {
+#   conn %>%
+#     dplyr::tbl("poblacion_edad") %>%
+#     dplyr::collect() %>%
+#     saveRDS(file = name)
+#   return(name)
+# }
+# 
+# get_censo <- function(conn, name) {
+#   conn %>%
+#     dplyr::tbl("censo") %>%
+#     dplyr::collect() %>%
+#     saveRDS(file = name)
+#   return(name)
+# }
+# 
+# get_maestra_comunas <- function(conn, name) {
+#   conn %>%
+#     dplyr::tbl("maestra_comunas") %>%
+#     dplyr::collect() %>%
+#     saveRDS(file = name)
+#   return(name)
+# }
 
 #' Todos los pares de comunas vecinas
 #' 
@@ -31,9 +55,8 @@ get_vecinos <- function() {
 #'   \item{pob_20_64}
 #' }
 #' @note No incluye la antártica (12202)
-get_pob_20_64 <- function(conn) {
-  conn %>%
-    dplyr::tbl("poblacion_edad") %>% 
+get_pob_20_64 <- function() {
+  readRDS("data/poblacion_edad.rds") %>% 
     dplyr::rename(n = total_poblacion_efectivamente_censada) %>%
     dplyr::select(codigo_comuna, edad, n) %>%
     dplyr::collect() %>%
@@ -55,9 +78,8 @@ get_pob_20_64 <- function(conn) {
 #'   \item{pob_20_64}
 #' }
 #' @note No incluye la antártica (12202)
-get_inmigrantes <- function(conn) {
-  conn %>%
-    dplyr::tbl("censo") %>% 
+get_inmigrantes <- function() {
+  readRDS("data/censo.rds") %>% 
     dplyr::collect() %>%
     dplyr::mutate(dplyr::across(
       where(bit64::is.integer64), 
@@ -108,9 +130,8 @@ get_inmigrantes <- function(conn) {
 #' }  
 #' @note No incluye la antártica (12202)
 #' @note Hay 21 comunas (todas pequeñas) con NA en varias variables
-get_comunas <- function(conn, inmigrantes, pob_20_64) {
-  conn %>%
-    dplyr::tbl("maestra_comunas") %>% 
+get_comunas <- function(inmigrantes, pob_20_64) {
+  readRDS("data/maestra_comunas.rds") %>% 
     dplyr::collect() %>%
     dplyr::mutate(dplyr::across(
       where(bit64::is.integer64), 
@@ -304,25 +325,25 @@ get_vacunados1 <- function() {
 #' }
 #' @note No incluye la antártica (12202)
 #' @source https://github.com/MinCiencia/Datos-COVID19 - Producto 80
-get_pp_vacunados_completo <- function(conn) {
-  data <- 
-    conn %>%
-    dplyr::tbl("vw_porcentaje_vacunados_sc") %>%
-    dplyr::filter(codigo_comuna != 12202) %>%
-    dplyr::collect() %>%
-    dplyr::mutate(
-      semana_epidemiologica = as.numeric(semana_epidemiologica),
-      sepi_week     = semana_epidemiologica %% 100,
-      sepi_year     = floor(semana_epidemiologica / 100),
-      codigo_semana = sepi_week + max(sepi_week) * (sepi_year == 2021)
-    ) %>%
-    dplyr::select(
-      codigo_comuna, 
-      codigo_semana, 
-      pp_vacunados_completo = porcentaje_vacunados_esquema_completo
-    ) %>%
-    tibble::as_tibble()
-  data
+get_pp_vacunados_completo <- function() {
+  error("IG: TODO - Fix this function using the oficial dataset")
+  # data <- 
+  #   readRDS("data/vw_porcentaje_vacunados_sc.rds") %>%
+  #   dplyr::filter(codigo_comuna != 12202) %>%
+  #   dplyr::collect() %>%
+  #   dplyr::mutate(
+  #     semana_epidemiologica = as.numeric(semana_epidemiologica),
+  #     sepi_week     = semana_epidemiologica %% 100,
+  #     sepi_year     = floor(semana_epidemiologica / 100),
+  #     codigo_semana = sepi_week + max(sepi_week) * (sepi_year == 2021)
+  #   ) %>%
+  #   dplyr::select(
+  #     codigo_comuna, 
+  #     codigo_semana, 
+  #     pp_vacunados_completo = porcentaje_vacunados_esquema_completo
+  #   ) %>%
+  #   tibble::as_tibble()
+  # data
 }
 
 #' Personas con 2da vacuna, según comuna y semana epidemiológica

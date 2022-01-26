@@ -21,11 +21,16 @@ source("R/utils.R")
 source("R/targets.R")
 
 list(
+  # ## The following commented targets deal with files 
+  # ## previously stored in AWS Athena
   targets::tar_target(conn, get_conn()),
+  # targets::tar_target(censo, get_censo(conn, "data/censo.rds"), format = "file"),
+  # targets::tar_target(poblacion_edad, get_poblacion_edad(conn, "data/poblacion_edad.rds"), format = "file"),
+  # targets::tar_target(maestra_comunas, get_maestra_comunas(conn, "data/maestra_comunas.rds"), format = "file"),
   targets::tar_target(vecinos, get_vecinos()),
-  targets::tar_target(pob_20_64, get_pob_20_64(conn)),
-  targets::tar_target(inmigrantes, get_inmigrantes(conn)),
-  targets::tar_target(comunas, get_comunas(conn, inmigrantes, pob_20_64)),
+  targets::tar_target(pob_20_64, get_pob_20_64()),
+  targets::tar_target(inmigrantes, get_inmigrantes()),
+  targets::tar_target(comunas, get_comunas(inmigrantes, pob_20_64)),
   targets::tar_target(poblacion, get_poblacion(comunas)),
   targets::tar_target(pasos, get_pasos()),
   targets::tar_target(casos, get_casos()), # version censurada
@@ -33,7 +38,7 @@ list(
   targets::tar_target(pcr, get_pcr(comunas)), # debiese cubrir todas las semanas (añadir ceros está bien)
   targets::tar_target(vacunados1, get_vacunados1()), # debiese cubrir todas las semanas (añadir ceros está bien)
   targets::tar_target(vacunados2, get_vacunados2()), # debiese cubrir todas las semanas (añadir ceros está bien)
-  targets::tar_target(pp_vacunados_completo, get_pp_vacunados_completo(conn)),
+  targets::tar_target(pp_vacunados_completo, get_pp_vacunados_completo()), # TODO: Fix this function using the oficial dataset
   targets::tar_target(im_interno, get_im_interno()),
   targets::tar_target(im_externo, get_im_externo()),
   targets::tar_target(mp10, get_mp10()),
