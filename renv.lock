@@ -125,6 +125,13 @@
       "Repository": "RSPM",
       "Hash": "551d50addb18c7b99637aa377a25afc8"
     },
+    "RcppRoll": {
+      "Package": "RcppRoll",
+      "Version": "0.3.0",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "84a03997fbb5acfb3c9b43bad88fea1f"
+    },
     "SparseM": {
       "Package": "SparseM",
       "Version": "1.81",
